@@ -44,40 +44,151 @@ const closeSettingsModal = document.getElementById('close-settings-modal');
 const historyBtn = document.getElementById('history-btn');
 const historyModal = document.getElementById('history-modal');
 const closeHistoryModal = document.getElementById('close-history-modal');
+const historyList = document.getElementById('history-list');
+const clearHistoryBtn = document.getElementById('clear-history-btn');
 
 const showDevBtn = document.getElementById('show-dev-btn');
 const devModal = document.getElementById('dev-modal');
 const closeDevModal = document.getElementById('close-dev-modal');
 
+const langToggleBtn = document.getElementById('lang-toggle-btn');
+const langIndicator = document.getElementById('lang-indicator');
+
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 
 let isSignUpMode = true;
+let currentLang = localStorage.getItem('syf_lang') || 'ar';
 
 // ==========================================
-// 3. Auth Mode Toggle (Signup vs Login)
+// 3. Language Translations Dictionary
+// ==========================================
+const translations = {
+    ar: {
+        searchPlaceholder: "ابحث في SYF أو أدخل رابطاً...",
+        addShortcut: "إضافة موقع",
+        loginTitle: "إنشاء حساب جديد",
+        loginTitleAlt: "تسجيل الدخول",
+        usernameLabel: "الاسم الثلاثي",
+        namePlaceholder: "أدخل اسمك الثلاثي هنا...",
+        submitSignUp: "إنشاء حساب",
+        submitLogin: "دخول",
+        toggleToLogin: "لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول",
+        toggleToSignUp: "ليس لديك حساب؟ اضغط هنا لإنشاء حساب جديد",
+        addShortcutTitle: "إضافة اختصار جديد",
+        siteNameLabel: "اسم الموقع",
+        siteUrlLabel: "رابط الموقع (URL)",
+        saveBtn: "حفظ الاختصار",
+        settingsTitle: "الإعدادات",
+        historyTitle: "سجل البحث",
+        changeLangText: "تغيير اللغة",
+        devPageBtn: "المطور",
+        clearHistory: "مسح السجل",
+        devTitle: "المطور",
+        devName: "المطور:",
+        devLocation: "الموقع:",
+        visitYoutube: "زيارة القناة (@YYT_1)",
+        noHistory: "لا يوجد سجل بحث حتى الآن."
+    },
+    en: {
+        searchPlaceholder: "Search SYF or enter URL...",
+        addShortcut: "Add Shortcut",
+        loginTitle: "Create New Account",
+        loginTitleAlt: "Login",
+        usernameLabel: "Full Name",
+        namePlaceholder: "Enter your full name...",
+        submitSignUp: "Sign Up",
+        submitLogin: "Sign In",
+        toggleToLogin: "Already have an account? Click to Login",
+        toggleToSignUp: "Don't have an account? Click to Sign Up",
+        addShortcutTitle: "Add New Shortcut",
+        siteNameLabel: "Site Name",
+        siteUrlLabel: "Site URL",
+        saveBtn: "Save Shortcut",
+        settingsTitle: "Settings",
+        historyTitle: "Search History",
+        changeLangText: "Change Language",
+        devPageBtn: "The Developer",
+        clearHistory: "Clear History",
+        devTitle: "Developer Info",
+        devName: "Developer:",
+        devLocation: "Location:",
+        visitYoutube: "Visit Channel (@YYT_1)",
+        noHistory: "No search history yet."
+    }
+};
+
+function applyLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('syf_lang', lang);
+    const htmlRoot = document.getElementById('html-root');
+    
+    if (htmlRoot) {
+        htmlRoot.setAttribute('lang', lang);
+        htmlRoot.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    }
+
+    if (langIndicator) langIndicator.innerText = lang === 'ar' ? 'EN' : 'AR';
+
+    // Translate elements with data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) el.innerText = translations[lang][key];
+    });
+
+    // Translate placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang][key]) el.placeholder = translations[lang][key];
+    });
+
+    // Update dynamic modal titles
+    if (modalTitle) {
+        modalTitle.innerText = isSignUpMode ? translations[lang].loginTitle : translations[lang].loginTitleAlt;
+    }
+    if (loginSubmitBtn) {
+        loginSubmitBtn.innerText = isSignUpMode ? translations[lang].submitSignUp : translations[lang].submitLogin;
+    }
+    if (authToggleMsg) {
+        authToggleMsg.innerText = isSignUpMode ? translations[lang].toggleToLogin : translations[lang].toggleToSignUp;
+    }
+}
+
+// Language toggle event
+if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', () => {
+        const newLang = currentLang === 'ar' ? 'en' : 'ar';
+        applyLanguage(newLang);
+    });
+}
+
+// Initial Language Apply
+applyLanguage(currentLang);
+
+// ==========================================
+// 4. Auth Mode Toggle (Signup vs Login)
 // ==========================================
 if (authToggleMsg) {
     authToggleMsg.addEventListener('click', () => {
         isSignUpMode = !isSignUpMode;
         if (isSignUpMode) {
-            modalTitle.innerText = "إنشاء حساب جديد";
+            modalTitle.innerText = translations[currentLang].loginTitle;
             nameGroup.style.display = "flex";
-            loginSubmitBtn.innerText = "إنشاء حساب";
-            authToggleMsg.innerText = "لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول";
+            loginSubmitBtn.innerText = translations[currentLang].submitSignUp;
+            authToggleMsg.innerText = translations[currentLang].toggleToLogin;
             usernameInput.required = true;
         } else {
-            modalTitle.innerText = "تسجيل الدخول";
+            modalTitle.innerText = translations[currentLang].loginTitleAlt;
             nameGroup.style.display = "none";
-            loginSubmitBtn.innerText = "دخول";
-            authToggleMsg.innerText = "ليس لديك حساب؟ اضغط هنا لإنشاء حساب جديد";
+            loginSubmitBtn.innerText = translations[currentLang].submitLogin;
+            authToggleMsg.innerText = translations[currentLang].toggleToSignUp;
             usernameInput.required = false;
         }
     });
 }
 
 // ==========================================
-// 4. Form Submission (Firebase Auth)
+// 5. Form Submission (Firebase Auth)
 // ==========================================
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
@@ -89,16 +200,14 @@ if (loginForm) {
         if (isSignUpMode) {
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    return userCredential.user.updateProfile({
-                        displayName: name
-                    });
+                    return userCredential.user.updateProfile({ displayName: name });
                 })
                 .then(() => {
                     loginModal.style.display = 'none';
                     loginForm.reset();
                 })
                 .catch((error) => {
-                    alert("خطأ في إنشاء الحساب: " + error.message);
+                    alert((currentLang === 'ar' ? "خطأ: " : "Error: ") + error.message);
                 });
         } else {
             auth.signInWithEmailAndPassword(email, password)
@@ -107,14 +216,14 @@ if (loginForm) {
                     loginForm.reset();
                 })
                 .catch((error) => {
-                    alert("خطأ في تسجيل الدخول: " + error.message);
+                    alert((currentLang === 'ar' ? "خطأ: " : "Error: ") + error.message);
                 });
         }
     });
 }
 
 // ==========================================
-// 5. Auth State Observer
+// 6. Auth State Observer
 // ==========================================
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -134,16 +243,80 @@ auth.onAuthStateChanged((user) => {
 });
 
 // ==========================================
-// 6. Modals UI Controls
+// 7. Search & History Management
+// ==========================================
+function getHistory() {
+    return JSON.parse(localStorage.getItem('syf_search_history') || '[]');
+}
+
+function saveSearchQuery(query) {
+    let history = getHistory();
+    history.unshift({ query: query, timestamp: new Date().toLocaleString() });
+    localStorage.setItem('syf_search_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+    if (!historyList) return;
+    const history = getHistory();
+    historyList.innerHTML = '';
+
+    if (history.length === 0) {
+        historyList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">${translations[currentLang].noHistory}</li>`;
+        return;
+    }
+
+    history.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;";
+        li.innerHTML = `
+            <span><i class="fa-solid fa-clock-rotate-left" style="margin-left: 8px; margin-right: 8px; color: #666;"></i> ${item.query}</span>
+            <small style="color: #999; font-size: 0.75rem;">${item.timestamp}</small>
+        `;
+        li.addEventListener('click', () => {
+            searchInput.value = item.query;
+            historyModal.style.display = 'none';
+            performSearch();
+        });
+        historyList.appendChild(li);
+    });
+}
+
+if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+        localStorage.removeItem('syf_search_history');
+        renderHistory();
+    });
+}
+
+function performSearch() {
+    const query = searchInput.value.trim();
+    if (query !== '') {
+        saveSearchQuery(query);
+        if (query.startsWith('http://') || query.startsWith('https://')) {
+            window.location.href = query;
+        } else {
+            window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        }
+    }
+}
+
+if (searchBtn) searchBtn.addEventListener('click', performSearch);
+if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+}
+
+// ==========================================
+// 8. Modals UI Controls
 // ==========================================
 if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
 if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
 
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-        auth.signOut().then(() => {
-            profileModal.style.display = 'none';
-        });
+        auth.signOut().then(() => profileModal.style.display = 'none');
     });
 }
 
@@ -153,6 +326,7 @@ if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => setti
 if (historyBtn) {
     historyBtn.addEventListener('click', () => {
         settingsModal.style.display = 'none';
+        renderHistory();
         historyModal.style.display = 'flex';
     });
 }
@@ -172,24 +346,3 @@ window.addEventListener('click', (e) => {
         e.target.style.display = 'none';
     }
 });
-
-// ==========================================
-// 7. Search Logic
-// ==========================================
-function performSearch() {
-    const query = searchInput.value.trim();
-    if (query !== '') {
-        if (query.startsWith('http://') || query.startsWith('https://')) {
-            window.location.href = query;
-        } else {
-            window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        }
-    }
-}
-
-if (searchBtn) searchBtn.addEventListener('click', performSearch);
-if (searchInput) {
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
-    });
-}

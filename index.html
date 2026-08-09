@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYF Browser</title>
+    <!-- App Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+        <!-- Start Side: User Profile Avatar -->
+        <div class="top-bar-start">
+            <div id="user-badge-container">
+                <div id="user-avatar-btn" class="user-avatar-wrapper" style="display: none;">
+                    <img id="top-user-avatar" src="" alt="User Avatar">
+                </div>
+            </div>
+        </div>
+
+        <!-- End Side: Action Icons (Background & Settings) -->
+        <div class="top-bar-end">
+            <button class="icon-btn" id="bg-btn" title="تغيير الخلفية" data-i18n-title="changeBg">
+                <i class="fa-solid fa-image"></i>
+            </button>
+            <button class="icon-btn" id="settings-btn" title="الإعدادات" data-i18n-title="settings">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+            <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
+        </div>
+    </div>
+
+    <!-- Main Home View (Centered) -->
+    <div id="main-view">
+        <div class="logo" id="home-logo">
+            <span class="char-s">S</span><span class="char-y">Y</span><span class="char-f">F</span>
+        </div>
+
+        <!-- Integrated Search Box -->
+        <div class="search-box">
+            <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً..." data-i18n-placeholder="searchPlaceholder">
+            <div class="search-actions">
+                <i class="fa-solid fa-microphone action-btn" id="mic-btn" title="البحث بالصوت"></i>
+                <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
+            </div>
+        </div>
+
+        <!-- Custom Shortcuts Grid -->
+        <div class="shortcuts-container" id="shortcuts-grid">
+            <a href="https://www.youtube.com" class="shortcut-item youtube">
+                <div class="shortcut-icon"><i class="fa-brands fa-youtube"></i></div>
+                <span class="shortcut-label">يوتيوب</span>
+            </a>
+            <a href="https://www.instagram.com" class="shortcut-item instagram">
+                <div class="shortcut-icon"><i class="fa-brands fa-instagram"></i></div>
+                <span class="shortcut-label">إنستغرام</span>
+            </a>
+            <a href="https://www.facebook.com" class="shortcut-item facebook">
+                <div class="shortcut-icon"><i class="fa-brands fa-facebook-f"></i></div>
+                <span class="shortcut-label">فيسبوك</span>
+            </a>
+            <a href="https://www.netflix.com" class="shortcut-item netflix">
+                <div class="shortcut-icon"><i class="fa-solid fa-film"></i></div>
+                <span class="shortcut-label">نتفليكس</span>
+            </a>
+            <!-- Add New Shortcut Button -->
+            <div class="shortcut-item add-shortcut" id="add-shortcut-btn">
+                <div class="shortcut-icon add-icon"><i class="fa-solid fa-plus"></i></div>
+                <span class="shortcut-label" data-i18n="addShortcut">إضافة موقع</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mandatory Firebase Login / Signup Modal -->
+    <div class="modal force-modal" id="login-modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 id="modal-title" data-i18n="loginTitle" style="margin-bottom: 20px; text-align: center;">إنشاء حساب جديد</h2>
+            <form id="login-form">
+                <div class="form-group" id="name-group">
+                    <label data-i18n="usernameLabel">الاسم الثلاثي</label>
+                    <input type="text" id="username-input" autocomplete="name" placeholder="أدخل اسمك الثلاثي هنا..." data-i18n-placeholder="namePlaceholder">
+                </div>
+
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="email-input" required autocomplete="username" placeholder="name@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>كلمة السر</label>
+                    <input type="password" id="password-input" required autocomplete="current-password" placeholder="••••••••">
+                </div>
+
+                <button type="submit" class="submit-btn" id="login-submit-btn" style="margin-top: 15px;">إنشاء حساب</button>
+                
+                <p id="auth-toggle-msg" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem; font-weight: bold;">
+                    لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Profile Dropdown Modal -->
+    <div class="modal" id="profile-modal">
+        <div class="modal-content profile-card">
+            <span class="close-btn" id="close-profile-modal">&times;</span>
+            <div class="profile-info-box">
+                <img id="card-user-avatar" src="https://via.placeholder.com/80" alt="User Avatar" class="large-avatar">
+                <h3 id="card-user-name" class="profile-fullname"></h3>
+            </div>
+            <hr class="divider">
+            <button id="logout-btn" class="logout-action-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Shortcut Modal -->
+    <div class="modal" id="shortcut-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-shortcut-modal">&times;</span>
+            <h2 data-i18n="addShortcutTitle" style="margin-bottom: 20px;">إضافة اختصار جديد</h2>
+            <form id="shortcut-form">
+                <div class="form-group">
+                    <label data-i18n="siteNameLabel">اسم الموقع</label>
+                    <input type="text" id="shortcut-name-input" required placeholder="مثال: يوتيوب">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="siteUrlLabel">رابط الموقع (URL)</label>
+                    <input type="url" id="shortcut-url-input" required placeholder="https://example.com">
+                </div>
+                <button type="submit" class="submit-btn" data-i18n="saveBtn">حفظ الاختصار</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-settings-modal">&times;</span>
+            <h2 data-i18n="settingsTitle" style="margin-bottom: 20px;">الإعدادات</h2>
+            
+            <div class="settings-options">
+                <button class="settings-option-btn" id="history-btn">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span data-i18n="historyTitle">سجل البحث</span>
+                </button>
+                
+                <button class="settings-option-btn" id="lang-toggle-btn">
+                    <i class="fa-solid fa-globe"></i>
+                    <span data-i18n="changeLangText">تغيير اللغة</span> (<span id="lang-indicator">EN</span>)
+                </button>
+                
+                <button class="settings-option-btn" id="show-dev-btn">
+                    <i class="fa-solid fa-code"></i>
+                    <span data-i18n="devPageBtn">صفحة المطور</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal" id="history-modal">
+        <div class="modal-content history-content">
+            <span class="close-btn" id="close-history-modal">&times;</span>
+            <div class="history-header">
+                <h2 data-i18n="historyTitle">سجل البحث</h2>
+                <button class="clear-btn" id="clear-history-btn" data-i18n="clearHistory">مسح السجل</button>
+            </div>
+            <ul class="history-list" id="history-list">
+                <!-- History Items Loaded Here -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Developer Info Modal -->
+    <div class="modal" id="dev-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-dev-modal">&times;</span>
+            <h2 data-i18n="devTitle" style="margin-bottom: 15px;">صفحة المطور</h2>
+            <div class="developer-info">
+                <p><strong data-i18n="devName">المطور:</strong> يوسف أبو الحجاج صالح</p>
+                <p><strong data-i18n="devLocation">الموقع:</strong> مصر - قنا</p>
+                <br>
+                <a href="https://www.youtube.com/@YYT_1" target="_blank"><i class="fa-brands fa-youtube"></i> <span data-i18n="visitYoutube">زيارة القناة (@YYT_1)</span></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Compat Versions -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Main JavaScript File -->
+    <script src="script.js"></script>
+</body>
+</html>

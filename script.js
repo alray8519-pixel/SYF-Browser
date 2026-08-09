@@ -2,12 +2,12 @@
 // 1. Firebase Configuration & Initialization
 // ==========================================
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAk6UmlYdek_I7Jq5ZdRNVPJoyMmUArQeY",
+    authDomain: "syf-browser.firebaseapp.com",
+    projectId: "syf-browser",
+    storageBucket: "syf-browser.firebasestorage.app",
+    messagingSenderId: "458736540441",
+    appId: "1:458736540441:web:2e7da0fbfec1e17f2b8388"
 };
 
 // Initialize Firebase
@@ -136,29 +136,35 @@ auth.onAuthStateChanged((user) => {
 // ==========================================
 // 6. Modals UI Controls
 // ==========================================
-userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
-closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
+if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
+if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
 
-logoutBtn.addEventListener('click', () => {
-    auth.signOut().then(() => {
-        profileModal.style.display = 'none';
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut().then(() => {
+            profileModal.style.display = 'none';
+        });
     });
-});
+}
 
-settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
-closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
+if (settingsBtn) settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
+if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
 
-historyBtn.addEventListener('click', () => {
-    settingsModal.style.display = 'none';
-    historyModal.style.display = 'flex';
-});
-closeHistoryModal.addEventListener('click', () => historyModal.style.display = 'none');
+if (historyBtn) {
+    historyBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        historyModal.style.display = 'flex';
+    });
+}
+if (closeHistoryModal) closeHistoryModal.addEventListener('click', () => historyModal.style.display = 'none');
 
-showDevBtn.addEventListener('click', () => {
-    settingsModal.style.display = 'none';
-    devModal.style.display = 'flex';
-});
-closeDevModal.addEventListener('click', () => devModal.style.display = 'none');
+if (showDevBtn) {
+    showDevBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        devModal.style.display = 'flex';
+    });
+}
+if (closeDevModal) closeDevModal.addEventListener('click', () => devModal.style.display = 'none');
 
 // Close modals when clicking outside content
 window.addEventListener('click', (e) => {
@@ -181,7 +187,9 @@ function performSearch() {
     }
 }
 
-searchBtn.addEventListener('click', performSearch);
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performSearch();
-});
+if (searchBtn) searchBtn.addEventListener('click', performSearch);
+if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+}

@@ -16,9 +16,6 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// الأدمن المحدد
-const ADMIN_EMAIL = "admin@syfbrowser.com";
-
 // ==========================================
 // 2. DOM Elements Selection
 // ==========================================
@@ -73,20 +70,13 @@ const shortcutTitle = document.getElementById('shortcut-title');
 const shortcutUrl = document.getElementById('shortcut-url');
 const shortcutsGrid = document.getElementById('shortcuts-grid');
 
-// Support System
+// Support System (WhatsApp)
 const supportBtn = document.getElementById('support-btn');
 const supportModal = document.getElementById('support-modal');
 const closeSupportModal = document.getElementById('close-support-modal');
 const supportForm = document.getElementById('support-form');
-const supportNameInput = document.getElementById('support-name-input');
-const supportEmailInput = document.getElementById('support-email-input');
 const supportMessageInput = document.getElementById('support-message-input');
-
-// Admin Panel
-const adminPanelBtn = document.getElementById('admin-panel-btn');
-const adminModal = document.getElementById('admin-modal');
-const closeAdminModal = document.getElementById('close-admin-modal');
-const adminMessagesList = document.getElementById('admin-messages-list');
+const SUPPORT_WHATSAPP_NUMBER = "201227095092"; // رقم الدعم الفني
 
 let isSignUpMode = true;
 let currentLang = localStorage.getItem('syf_lang') || 'ar';
@@ -197,14 +187,10 @@ if (shortcutForm) {
 }
 
 // ==========================================
-// 6. Support System & Admin Panel (Firestore Integration)
+// 6. Support System (WhatsApp Redirection)
 // ==========================================
 if (supportBtn) {
     supportBtn.addEventListener('click', () => {
-        if (currentUserData) {
-            supportNameInput.value = currentUserData.displayName || '';
-            supportEmailInput.value = currentUserData.email || '';
-        }
         supportModal.style.display = 'flex';
     });
 }
@@ -213,72 +199,28 @@ if (closeSupportModal) closeSupportModal.addEventListener('click', () => support
 if (supportForm) {
     supportForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const name = supportNameInput.value.trim();
-        const email = supportEmailInput.value.trim();
-        const message = supportMessageInput.value.trim();
+        const messageText = supportMessageInput ? supportMessageInput.value.trim() : '';
+        let fullMessage = "مرحباً، أحتاج إلى مساعدة في متصفح SYF Browser.";
+        
+        if (currentUserData && currentUserData.displayName) {
+            fullMessage += `\nالاسم: ${currentUserData.displayName}`;
+        }
+        if (messageText !== '') {
+            fullMessage += `\nالرسالة: ${messageText}`;
+        }
 
-        // إرسال الرسالة إلى Firestore
-        db.collection("support_messages").add({
-            name: name,
-            email: email,
-            message: message,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => {
-            alert(currentLang === 'ar' ? 'تم إرسال رسالتك بنجاح إلى الأدمن وسيتواصل معك قريباً.' : 'Message sent successfully to Admin!');
-            supportModal.style.display = 'none';
-            supportForm.reset();
-        })
-        .catch((error) => {
-            alert((currentLang === 'ar' ? "خطأ أثناء الإرسال: " : "Error sending: ") + error.message);
-        });
+        const whatsappUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(fullMessage)}`;
+        
+        // فتح الواتساب
+        window.open(whatsappUrl, '_blank');
+        
+        supportModal.style.display = 'none';
+        supportForm.reset();
     });
 }
-
-function renderAdminMessages() {
-    if (!adminMessagesList) return;
-    adminMessagesList.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">جاري تحميل الرسائل...</p>';
-
-    db.collection("support_messages").orderBy("timestamp", "desc").get()
-        .then((querySnapshot) => {
-            adminMessagesList.innerHTML = '';
-            if (querySnapshot.empty) {
-                adminMessagesList.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">لا توجد رسائل دعم فني حالياً.</p>';
-                return;
-            }
-
-            querySnapshot.forEach((doc) => {
-                const msg = doc.data();
-                const timeString = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate().toLocaleString() : 'وقت غير متاح';
-                
-                const div = document.createElement('div');
-                div.style.cssText = "background: #f8f9fa; border: 1px solid #dadce0; border-radius: 10px; padding: 12px; margin-bottom: 12px;";
-                div.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 6px;">
-                        <span>${msg.name} (${msg.email})</span>
-                        <small style="color: #888;">${timeString}</small>
-                    </div>
-                    <p style="color: #333; font-size: 0.95rem; white-space: pre-wrap;">${msg.message}</p>
-                `;
-                adminMessagesList.appendChild(div);
-            });
-        })
-        .catch((error) => {
-            adminMessagesList.innerHTML = `<p style="text-align: center; color: red; padding: 20px;">خطأ في جلب الرسائل: ${error.message}</p>`;
-        });
-}
-
-if (adminPanelBtn) {
-    adminPanelBtn.addEventListener('click', () => {
-        settingsModal.style.display = 'none';
-        renderAdminMessages();
-        adminModal.style.display = 'flex';
-    });
-}
-if (closeAdminModal) closeAdminModal.addEventListener('click', () => adminModal.style.display = 'none');
 
 // ==========================================
-// 7. Auth State Observer & Admin Permissions
+// 7. Auth State Observer
 // ==========================================
 auth.onAuthStateChanged((user) => {
     currentUserData = user;
@@ -292,17 +234,9 @@ auth.onAuthStateChanged((user) => {
         topUserAvatar.src = photoURL;
         cardUserAvatar.src = photoURL;
         cardUserName.innerText = user.displayName || user.email;
-
-        // التحقق مما إذا كان المستخدم هو الأدمن
-        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-            adminPanelBtn.style.display = 'flex';
-        } else {
-            adminPanelBtn.style.display = 'none';
-        }
     } else {
         loginModal.style.display = 'flex';
         userAvatarBtn.style.display = 'none';
-        adminPanelBtn.style.display = 'none';
     }
 });
 

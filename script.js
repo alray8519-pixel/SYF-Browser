@@ -14,6 +14,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 // الأدمن المحدد
 const ADMIN_EMAIL = "admin@syfbrowser.com";
@@ -196,7 +197,7 @@ if (shortcutForm) {
 }
 
 // ==========================================
-// 6. Support System & Admin Panel
+// 6. Support System & Admin Panel (Firestore Integration)
 // ==========================================
 if (supportBtn) {
     supportBtn.addEventListener('click', () => {
@@ -216,44 +217,55 @@ if (supportForm) {
         const email = supportEmailInput.value.trim();
         const message = supportMessageInput.value.trim();
 
-        const supportMessages = JSON.parse(localStorage.getItem('syf_support_messages') || '[]');
-        supportMessages.push({
-            name,
-            email,
-            message,
-            timestamp: new Date().toLocaleString()
+        // إرسال الرسالة إلى Firestore
+        db.collection("support_messages").add({
+            name: name,
+            email: email,
+            message: message,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            alert(currentLang === 'ar' ? 'تم إرسال رسالتك بنجاح إلى الأدمن وسيتواصل معك قريباً.' : 'Message sent successfully to Admin!');
+            supportModal.style.display = 'none';
+            supportForm.reset();
+        })
+        .catch((error) => {
+            alert((currentLang === 'ar' ? "خطأ أثناء الإرسال: " : "Error sending: ") + error.message);
         });
-
-        localStorage.setItem('syf_support_messages', JSON.stringify(supportMessages));
-        alert(currentLang === 'ar' ? 'تم إرسال رسالتك بنجاح وسيتواصل مع الدعم الفني قريباً.' : 'Message sent successfully!');
-        
-        supportModal.style.display = 'none';
-        supportForm.reset();
     });
 }
 
 function renderAdminMessages() {
     if (!adminMessagesList) return;
-    const messages = JSON.parse(localStorage.getItem('syf_support_messages') || '[]');
-    adminMessagesList.innerHTML = '';
+    adminMessagesList.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">جاري تحميل الرسائل...</p>';
 
-    if (messages.length === 0) {
-        adminMessagesList.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">لا توجد رسائل دعم فني حالياً.</p>';
-        return;
-    }
+    db.collection("support_messages").orderBy("timestamp", "desc").get()
+        .then((querySnapshot) => {
+            adminMessagesList.innerHTML = '';
+            if (querySnapshot.empty) {
+                adminMessagesList.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">لا توجد رسائل دعم فني حالياً.</p>';
+                return;
+            }
 
-    messages.forEach((msg, idx) => {
-        const div = document.createElement('div');
-        div.style.cssText = "background: #f8f9fa; border: 1px solid #dadce0; border-radius: 10px; padding: 12px; margin-bottom: 12px;";
-        div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 6px;">
-                <span>${msg.name} (${msg.email})</span>
-                <small style="color: #888;">${msg.timestamp}</small>
-            </div>
-            <p style="color: #333; font-size: 0.95rem; white-space: pre-wrap;">${msg.message}</p>
-        `;
-        adminMessagesList.appendChild(div);
-    });
+            querySnapshot.forEach((doc) => {
+                const msg = doc.data();
+                const timeString = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate().toLocaleString() : 'وقت غير متاح';
+                
+                const div = document.createElement('div');
+                div.style.cssText = "background: #f8f9fa; border: 1px solid #dadce0; border-radius: 10px; padding: 12px; margin-bottom: 12px;";
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 6px;">
+                        <span>${msg.name} (${msg.email})</span>
+                        <small style="color: #888;">${timeString}</small>
+                    </div>
+                    <p style="color: #333; font-size: 0.95rem; white-space: pre-wrap;">${msg.message}</p>
+                `;
+                adminMessagesList.appendChild(div);
+            });
+        })
+        .catch((error) => {
+            adminMessagesList.innerHTML = `<p style="text-align: center; color: red; padding: 20px;">خطأ في جلب الرسائل: ${error.message}</p>`;
+        });
 }
 
 if (adminPanelBtn) {

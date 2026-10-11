@@ -1,243 +1,498 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl" id="html-root">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYF Browser</title>
-    <!-- App Favicon -->
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+// ==========================================
+// 1. Firebase Configuration & Initialization
+// ==========================================
+const firebaseConfig = {
+    apiKey: "AIzaSyAk6UmlYdek_I7Jq5ZdRNVPJoyMmUArQeY",
+    authDomain: "syf-browser.firebaseapp.com",
+    projectId: "syf-browser",
+    storageBucket: "syf-browser.firebasestorage.app",
+    messagingSenderId: "458736540441",
+    appId: "1:458736540441:web:2e7da0fbfec1e17f2b8388"
+};
 
-    <!-- Top Navigation Bar -->
-    <div class="top-bar">
-        <div class="top-bar-start">
-            <div id="user-badge-container">
-                <div id="user-avatar-btn" class="user-avatar-wrapper" style="display: none;">
-                    <img id="top-user-avatar" src="" alt="User Avatar">
-                </div>
-            </div>
-        </div>
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-        <div class="top-bar-end">
-            <!-- زر الدعم الفني -->
-            <button class="icon-btn" id="support-btn" title="الدعم الفني">
-                <i class="fa-solid fa-headset"></i>
-            </button>
-            <button class="icon-btn" id="bg-btn" title="تغيير الخلفية">
-                <i class="fa-solid fa-image"></i>
-            </button>
-            <button class="icon-btn" id="settings-btn" title="الإعدادات">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-            <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
-        </div>
-    </div>
+// ==========================================
+// 2. DOM Elements Selection
+// ==========================================
+const loginModal = document.getElementById('login-modal');
+const loginForm = document.getElementById('login-form');
+const modalTitle = document.getElementById('modal-title');
+const nameGroup = document.getElementById('name-group');
+const usernameInput = document.getElementById('username-input');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginSubmitBtn = document.getElementById('login-submit-btn');
+const authToggleMsg = document.getElementById('auth-toggle-msg');
 
-    <!-- Main Home View -->
-    <div id="main-view">
-        <div class="logo" id="home-logo">
-            <span class="char-s">S</span><span class="char-y">Y</span><span class="char-f">F</span>
-        </div>
+const userAvatarBtn = document.getElementById('user-avatar-btn');
+const topUserAvatar = document.getElementById('top-user-avatar');
+const profileModal = document.getElementById('profile-modal');
+const closeProfileModal = document.getElementById('close-profile-modal');
+const cardUserAvatar = document.getElementById('card-user-avatar');
+const cardUserName = document.getElementById('card-user-name');
+const logoutBtn = document.getElementById('logout-btn');
 
-        <!-- Search Box -->
-        <div class="search-box">
-            <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً..." data-i18n-placeholder="searchPlaceholder">
-            <div class="search-actions">
-                <i class="fa-solid fa-microphone action-btn" id="mic-btn" title="البحث بالصوت"></i>
-                <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
-            </div>
-        </div>
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettingsModal = document.getElementById('close-settings-modal');
 
-        <!-- Shortcuts -->
-        <div class="shortcuts-container" id="shortcuts-grid">
-            <a href="https://www.youtube.com" class="shortcut-item youtube">
-                <div class="shortcut-icon"><i class="fa-brands fa-youtube"></i></div>
-                <span class="shortcut-label">يوتيوب</span>
-            </a>
-            <a href="https://www.instagram.com" class="shortcut-item instagram">
-                <div class="shortcut-icon"><i class="fa-brands fa-instagram"></i></div>
-                <span class="shortcut-label">إنستغرام</span>
-            </a>
-            <a href="https://www.facebook.com" class="shortcut-item facebook">
-                <div class="shortcut-icon"><i class="fa-brands fa-facebook-f"></i></div>
-                <span class="shortcut-label">فيسبوك</span>
-            </a>
-            <a href="https://www.netflix.com" class="shortcut-item netflix">
-                <div class="shortcut-icon"><i class="fa-solid fa-film"></i></div>
-                <span class="shortcut-label">نتفليكس</span>
-            </a>
-            <div class="shortcut-item add-shortcut" id="add-shortcut-btn">
-                <div class="shortcut-icon add-icon"><i class="fa-solid fa-plus"></i></div>
-                <span class="shortcut-label" data-i18n="addShortcut">إضافة موقع</span>
-            </div>
-        </div>
-    </div>
+const bgBtn = document.getElementById('bg-btn');
+const bgFileInput = document.getElementById('bg-file-input');
 
-    <!-- Add Shortcut Modal -->
-    <div class="modal" id="shortcut-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-shortcut-modal">&times;</span>
-            <h2 data-i18n="addShortcutTitle" style="margin-bottom: 20px; text-align: center;">إضافة اختصار جديد</h2>
-            <form id="shortcut-form">
-                <div class="form-group">
-                    <label data-i18n="siteNameLabel">اسم الموقع</label>
-                    <input type="text" id="shortcut-title" required placeholder="مثال: جوجل">
-                </div>
-                <div class="form-group">
-                    <label data-i18n="siteUrlLabel">رابط الموقع (URL)</label>
-                    <input type="url" id="shortcut-url" required placeholder="https://example.com">
-                </div>
-                <button type="submit" class="submit-btn" data-i18n="saveBtn">حفظ الاختصار</button>
-            </form>
-        </div>
-    </div>
+const historyBtn = document.getElementById('history-btn');
+const historyModal = document.getElementById('history-modal');
+const closeHistoryModal = document.getElementById('close-history-modal');
+const historyList = document.getElementById('history-list');
+const clearHistoryBtn = document.getElementById('clear-history-btn');
 
-    <!-- Support Modal -->
-    <div class="modal" id="support-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-support-modal">&times;</span>
-            <h2 style="margin-bottom: 20px; text-align: center;">الدعم الفني والاتصال</h2>
-            <form id="support-form">
-                <div class="form-group">
-                    <label>الاسم</label>
-                    <input type="text" id="support-name-input" required placeholder="أدخل اسمك...">
-                </div>
-                <div class="form-group">
-                    <label>البريد الإلكتروني</label>
-                    <input type="email" id="support-email-input" required placeholder="name@example.com">
-                </div>
-                <div class="form-group">
-                    <label>تفاصيل المشكلة أو الرسالة</label>
-                    <textarea id="support-message-input" required placeholder="اكتب مشكلتك هنا..." style="width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 1px solid #dadce0; outline: none; resize: none;"></textarea>
-                </div>
-                <button type="submit" class="submit-btn">إرسال الرسالة</button>
-            </form>
-        </div>
-    </div>
+const showDevBtn = document.getElementById('show-dev-btn');
+const devModal = document.getElementById('dev-modal');
+const closeDevModal = document.getElementById('close-dev-modal');
 
-    <!-- Admin Panel Modal -->
-    <div class="modal" id="admin-modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <span class="close-btn" id="close-admin-modal">&times;</span>
-            <h2 style="margin-bottom: 20px; text-align: center;">لوحة تحكم الأدمن - رسائل الدعم</h2>
-            <div id="admin-messages-list" style="max-height: 350px; overflow-y: auto;">
-                <!-- Messages dynamic load -->
-            </div>
-        </div>
-    </div>
+const langToggleBtn = document.getElementById('lang-toggle-btn');
+const langIndicator = document.getElementById('lang-indicator');
 
-    <!-- Login Modal -->
-    <div class="modal force-modal" id="login-modal" style="display: flex;">
-        <div class="modal-content">
-            <h2 id="modal-title" data-i18n="loginTitle" style="margin-bottom: 20px; text-align: center;">إنشاء حساب جديد</h2>
-            <form id="login-form">
-                <div class="form-group" id="name-group">
-                    <label data-i18n="usernameLabel">الاسم الثلاثي</label>
-                    <input type="text" id="username-input" autocomplete="name" placeholder="أدخل اسمك الثلاثي هنا..." data-i18n-placeholder="namePlaceholder">
-                </div>
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+const micBtn = document.getElementById('mic-btn');
 
-                <div class="form-group">
-                    <label>البريد الإلكتروني</label>
-                    <input type="email" id="email-input" required autocomplete="username" placeholder="name@example.com">
-                </div>
+// Shortcuts
+const addShortcutBtn = document.getElementById('add-shortcut-btn');
+const shortcutModal = document.getElementById('shortcut-modal');
+const closeShortcutModal = document.getElementById('close-shortcut-modal');
+const shortcutForm = document.getElementById('shortcut-form');
+const shortcutTitle = document.getElementById('shortcut-title');
+const shortcutUrl = document.getElementById('shortcut-url');
+const shortcutsGrid = document.getElementById('shortcuts-grid');
 
-                <div class="form-group">
-                    <label>كلمة السر</label>
-                    <input type="password" id="password-input" required autocomplete="current-password" placeholder="••••••••">
-                </div>
+// Support System (WhatsApp)
+const supportBtn = document.getElementById('support-btn');
+const supportModal = document.getElementById('support-modal');
+const closeSupportModal = document.getElementById('close-support-modal');
+const supportForm = document.getElementById('support-form');
+const supportMessageInput = document.getElementById('support-message-input');
+const SUPPORT_WHATSAPP_NUMBER = "201227095092"; // رقم الدعم الفني
 
-                <button type="submit" class="submit-btn" id="login-submit-btn" style="margin-top: 15px;" data-i18n="submitSignUp">إنشاء حساب</button>
-                
-                <p id="auth-toggle-msg" data-i18n="toggleToLogin" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem; font-weight: bold;">
-                    لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول
-                </p>
-            </form>
-        </div>
-    </div>
+let isSignUpMode = true;
+let currentLang = localStorage.getItem('syf_lang') || 'ar';
+let currentUserData = null;
 
-    <!-- Profile Modal -->
-    <div class="modal" id="profile-modal">
-        <div class="modal-content profile-card">
-            <span class="close-btn" id="close-profile-modal">&times;</span>
-            <div class="profile-info-box">
-                <img id="card-user-avatar" src="https://via.placeholder.com/80" alt="User Avatar" class="large-avatar">
-                <h3 id="card-user-name" class="profile-fullname"></h3>
-            </div>
-            <hr class="divider">
-            <button id="logout-btn" class="logout-action-btn">
-                <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
-            </button>
-        </div>
-    </div>
+// ==========================================
+// 3. Saved Custom Background Loading
+// ==========================================
+const savedBg = localStorage.getItem('syf_custom_bg');
+if (savedBg) {
+    document.body.style.backgroundImage = `url('${savedBg}')`;
+}
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settings-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-settings-modal">&times;</span>
-            <h2 data-i18n="settingsTitle" style="margin-bottom: 20px;">الإعدادات</h2>
-            
-            <div class="settings-options">
-                <button class="settings-option-btn" id="history-btn">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span data-i18n="historyTitle">سجل البحث</span>
-                </button>
-                
-                <button class="settings-option-btn" id="lang-toggle-btn">
-                    <i class="fa-solid fa-globe"></i>
-                    <span data-i18n="changeLangText">تغيير اللغة</span> (<span id="lang-indicator">EN</span>)
-                </button>
-                
-                <button class="settings-option-btn" id="show-dev-btn">
-                    <i class="fa-solid fa-code"></i>
-                    <span data-i18n="devPageBtn">المطور</span>
-                </button>
+if (bgBtn && bgFileInput) {
+    bgBtn.addEventListener('click', () => bgFileInput.click());
+    bgFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const bgUrl = evt.target.result;
+                document.body.style.backgroundImage = `url('${bgUrl}')`;
+                localStorage.setItem('syf_custom_bg', bgUrl);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
-                <!-- خيار لوحة الأدمن (يظهر فقط للأدمن) -->
-                <button class="settings-option-btn" id="admin-panel-btn" style="display: none; background: #feefe3; color: #d93025; border-color: #fce8e6;">
-                    <i class="fa-solid fa-user-shield"></i>
-                    <span>لوحة تحكم الأدمن</span>
-                </button>
-            </div>
-        </div>
-    </div>
+// ==========================================
+// 4. Voice Search (Microphone)
+// ==========================================
+if (micBtn) {
+    micBtn.addEventListener('click', () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = currentLang === 'ar' ? 'ar-SA' : 'en-US';
+            micBtn.style.color = '#ea4335';
+            recognition.start();
 
-    <!-- History Modal -->
-    <div class="modal" id="history-modal">
-        <div class="modal-content history-content">
-            <span class="close-btn" id="close-history-modal">&times;</span>
-            <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 data-i18n="historyTitle">سجل البحث</h2>
-                <button class="clear-btn" id="clear-history-btn" data-i18n="clearHistory" style="background: #ea4335; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">مسح السجل</button>
-            </div>
-            <ul class="history-list" id="history-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;">
-                <!-- History Items Loaded Here -->
-            </ul>
-        </div>
-    </div>
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                searchInput.value = transcript;
+                micBtn.style.color = '#5f6368';
+                performSearch();
+            };
 
-    <!-- Developer Info Modal -->
-    <div class="modal" id="dev-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-dev-modal">&times;</span>
-            <h2 data-i18n="devTitle" style="margin-bottom: 15px;">صفحة المطور</h2>
-            <div class="developer-info">
-                <p><strong data-i18n="devName">المطور:</strong> يوسف أبو الحجاج صالح</p>
-                <p><strong data-i18n="devLocation">الموقع:</strong> مصر - قنا</p>
-                <br>
-                <a href="https://www.youtube.com/@YYT_1" target="_blank"><i class="fa-brands fa-youtube"></i> <span data-i18n="visitYoutube">زيارة القناة (@YYT_1)</span></a>
-            </div>
-        </div>
-    </div>
+            recognition.onerror = () => {
+                micBtn.style.color = '#5f6368';
+                alert(currentLang === 'ar' ? 'تعذر التعرف على الصوت' : 'Voice recognition failed');
+            };
 
-    <!-- Firebase SDK Compat Versions -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+            recognition.onend = () => {
+                micBtn.style.color = '#5f6368';
+            };
+        } else {
+            alert(currentLang === 'ar' ? 'البحث الصوتي غير مدعوم في هذا المتصفح' : 'Voice search not supported');
+        }
+    });
+}
 
-    <!-- Main JavaScript File -->
-    <script src="script.js"></script>
-</body>
-</html>
+// ==========================================
+// 5. Custom Shortcuts Management
+// ==========================================
+function getCustomShortcuts() {
+    return JSON.parse(localStorage.getItem('syf_custom_shortcuts') || '[]');
+}
+
+function renderShortcuts() {
+    const customList = getCustomShortcuts();
+    document.querySelectorAll('.custom-shortcut-item').forEach(el => el.remove());
+
+    customList.forEach(item => {
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.className = 'shortcut-item custom-shortcut-item';
+        a.innerHTML = `
+            <div class="shortcut-icon"><i class="fa-solid fa-globe"></i></div>
+            <span class="shortcut-label">${item.title}</span>
+        `;
+        shortcutsGrid.insertBefore(a, addShortcutBtn);
+    });
+}
+
+renderShortcuts();
+
+if (addShortcutBtn) addShortcutBtn.addEventListener('click', () => shortcutModal.style.display = 'flex');
+if (closeShortcutModal) closeShortcutModal.addEventListener('click', () => shortcutModal.style.display = 'none');
+
+if (shortcutForm) {
+    shortcutForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = shortcutTitle.value.trim();
+        let url = shortcutUrl.value.trim();
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+
+        const shortcuts = getCustomShortcuts();
+        shortcuts.push({ title, url });
+        localStorage.setItem('syf_custom_shortcuts', JSON.stringify(shortcuts));
+        renderShortcuts();
+
+        shortcutModal.style.display = 'none';
+        shortcutForm.reset();
+    });
+}
+
+// ==========================================
+// 6. Support System (WhatsApp Redirection)
+// ==========================================
+if (supportBtn) {
+    supportBtn.addEventListener('click', () => {
+        supportModal.style.display = 'flex';
+    });
+}
+if (closeSupportModal) closeSupportModal.addEventListener('click', () => supportModal.style.display = 'none');
+
+if (supportForm) {
+    supportForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const messageText = supportMessageInput ? supportMessageInput.value.trim() : '';
+        let fullMessage = "مرحباً، أحتاج إلى مساعدة في متصفح SYF Browser.";
+        
+        if (currentUserData && currentUserData.displayName) {
+            fullMessage += `\nالاسم: ${currentUserData.displayName}`;
+        }
+        if (messageText !== '') {
+            fullMessage += `\nالرسالة: ${messageText}`;
+        }
+
+        const whatsappUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(fullMessage)}`;
+        
+        // فتح الواتساب
+        window.open(whatsappUrl, '_blank');
+        
+        supportModal.style.display = 'none';
+        supportForm.reset();
+    });
+}
+
+// ==========================================
+// 7. Auth State Observer
+// ==========================================
+auth.onAuthStateChanged((user) => {
+    currentUserData = user;
+    if (user) {
+        loginModal.style.display = 'none';
+        userAvatarBtn.style.display = 'block';
+        
+        const defaultAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName || user.email) + "&background=1a73e8&color=fff";
+        const photoURL = user.photoURL || defaultAvatar;
+
+        topUserAvatar.src = photoURL;
+        cardUserAvatar.src = photoURL;
+        cardUserName.innerText = user.displayName || user.email;
+    } else {
+        loginModal.style.display = 'flex';
+        userAvatarBtn.style.display = 'none';
+    }
+});
+
+// ==========================================
+// 8. Language Translations & Logic
+// ==========================================
+const translations = {
+    ar: {
+        searchPlaceholder: "ابحث في SYF أو أدخل رابطاً...",
+        addShortcut: "إضافة موقع",
+        loginTitle: "إنشاء حساب جديد",
+        loginTitleAlt: "تسجيل الدخول",
+        usernameLabel: "الاسم الثلاثي",
+        namePlaceholder: "أدخل اسمك الثلاثي هنا...",
+        submitSignUp: "إنشاء حساب",
+        submitLogin: "دخول",
+        toggleToLogin: "لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول",
+        toggleToSignUp: "ليس لديك حساب؟ اضغط هنا لإنشاء حساب جديد",
+        addShortcutTitle: "إضافة اختصار جديد",
+        siteNameLabel: "اسم الموقع",
+        siteUrlLabel: "رابط الموقع (URL)",
+        saveBtn: "حفظ الاختصار",
+        settingsTitle: "الإعدادات",
+        historyTitle: "سجل البحث",
+        changeLangText: "تغيير اللغة",
+        devPageBtn: "المطور",
+        clearHistory: "مسح السجل",
+        devTitle: "المطور",
+        devName: "المطور:",
+        devLocation: "الموقع:",
+        visitYoutube: "زيارة القناة (@YYT_1)",
+        noHistory: "لا يوجد سجل بحث حتى الآن."
+    },
+    en: {
+        searchPlaceholder: "Search SYF or enter URL...",
+        addShortcut: "Add Shortcut",
+        loginTitle: "Create New Account",
+        loginTitleAlt: "Login",
+        usernameLabel: "Full Name",
+        namePlaceholder: "Enter your full name...",
+        submitSignUp: "Sign Up",
+        submitLogin: "Sign In",
+        toggleToLogin: "Already have an account? Click to Login",
+        toggleToSignUp: "Don't have an account? Click to Sign Up",
+        addShortcutTitle: "Add New Shortcut",
+        siteNameLabel: "Site Name",
+        siteUrlLabel: "Site URL",
+        saveBtn: "Save Shortcut",
+        settingsTitle: "Settings",
+        historyTitle: "Search History",
+        changeLangText: "Change Language",
+        devPageBtn: "The Developer",
+        clearHistory: "Clear History",
+        devTitle: "Developer Info",
+        devName: "Developer:",
+        devLocation: "Location:",
+        visitYoutube: "Visit Channel (@YYT_1)",
+        noHistory: "No search history yet."
+    }
+};
+
+function applyLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('syf_lang', lang);
+    const htmlRoot = document.getElementById('html-root');
+    
+    if (htmlRoot) {
+        htmlRoot.setAttribute('lang', lang);
+        htmlRoot.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    }
+
+    if (langIndicator) langIndicator.innerText = lang === 'ar' ? 'EN' : 'AR';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) el.innerText = translations[lang][key];
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang][key]) el.placeholder = translations[lang][key];
+    });
+
+    if (modalTitle) {
+        modalTitle.innerText = isSignUpMode ? translations[lang].loginTitle : translations[lang].loginTitleAlt;
+    }
+    if (loginSubmitBtn) {
+        loginSubmitBtn.innerText = isSignUpMode ? translations[lang].submitSignUp : translations[lang].submitLogin;
+    }
+    if (authToggleMsg) {
+        authToggleMsg.innerText = isSignUpMode ? translations[lang].toggleToLogin : translations[lang].toggleToSignUp;
+    }
+}
+
+if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', () => {
+        const newLang = currentLang === 'ar' ? 'en' : 'ar';
+        applyLanguage(newLang);
+    });
+}
+
+applyLanguage(currentLang);
+
+// Auth Mode Toggle
+if (authToggleMsg) {
+    authToggleMsg.addEventListener('click', () => {
+        isSignUpMode = !isSignUpMode;
+        if (isSignUpMode) {
+            modalTitle.innerText = translations[currentLang].loginTitle;
+            nameGroup.style.display = "flex";
+            loginSubmitBtn.innerText = translations[currentLang].submitSignUp;
+            authToggleMsg.innerText = translations[currentLang].toggleToLogin;
+            usernameInput.required = true;
+        } else {
+            modalTitle.innerText = translations[currentLang].loginTitleAlt;
+            nameGroup.style.display = "none";
+            loginSubmitBtn.innerText = translations[currentLang].submitLogin;
+            authToggleMsg.innerText = translations[currentLang].toggleToSignUp;
+            usernameInput.required = false;
+        }
+    });
+}
+
+// Form Submission (Firebase Auth)
+if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const name = usernameInput.value.trim();
+
+        if (isSignUpMode) {
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    return userCredential.user.updateProfile({ displayName: name });
+                })
+                .then(() => {
+                    loginModal.style.display = 'none';
+                    loginForm.reset();
+                })
+                .catch((error) => {
+                    alert((currentLang === 'ar' ? "خطأ: " : "Error: ") + error.message);
+                });
+        } else {
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    loginModal.style.display = 'none';
+                    loginForm.reset();
+                })
+                .catch((error) => {
+                    alert((currentLang === 'ar' ? "خطأ: " : "Error: ") + error.message);
+                });
+        }
+    });
+}
+
+// ==========================================
+// 9. Search & History
+// ==========================================
+function getHistory() {
+    return JSON.parse(localStorage.getItem('syf_search_history') || '[]');
+}
+
+function saveSearchQuery(query) {
+    let history = getHistory();
+    history.unshift({ query: query, timestamp: new Date().toLocaleString() });
+    localStorage.setItem('syf_search_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+    if (!historyList) return;
+    const history = getHistory();
+    historyList.innerHTML = '';
+
+    if (history.length === 0) {
+        historyList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">${translations[currentLang].noHistory}</li>`;
+        return;
+    }
+
+    history.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;";
+        li.innerHTML = `
+            <span><i class="fa-solid fa-clock-rotate-left" style="margin-left: 8px; margin-right: 8px; color: #666;"></i> ${item.query}</span>
+            <small style="color: #999; font-size: 0.75rem;">${item.timestamp}</small>
+        `;
+        li.addEventListener('click', () => {
+            searchInput.value = item.query;
+            historyModal.style.display = 'none';
+            performSearch();
+        });
+        historyList.appendChild(li);
+    });
+}
+
+if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+        localStorage.removeItem('syf_search_history');
+        renderHistory();
+    });
+}
+
+function performSearch() {
+    const query = searchInput.value.trim();
+    if (query !== '') {
+        saveSearchQuery(query);
+        if (query.startsWith('http://') || query.startsWith('https://')) {
+            window.location.href = query;
+        } else {
+            window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        }
+    }
+}
+
+if (searchBtn) searchBtn.addEventListener('click', performSearch);
+if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+}
+
+// ==========================================
+// 10. Modals UI Controls
+// ==========================================
+if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
+if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut().then(() => profileModal.style.display = 'none');
+    });
+}
+
+if (settingsBtn) settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
+if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
+
+if (historyBtn) {
+    historyBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        renderHistory();
+        historyModal.style.display = 'flex';
+    });
+}
+if (closeHistoryModal) closeHistoryModal.addEventListener('click', () => historyModal.style.display = 'none');
+
+if (showDevBtn) {
+    showDevBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        devModal.style.display = 'flex';
+    });
+}
+if (closeDevModal) closeDevModal.addEventListener('click', () => devModal.style.display = 'none');
+
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal') && !e.target.classList.contains('force-modal')) {
+        e.target.style.display = 'none';
+    }
+});

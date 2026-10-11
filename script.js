@@ -76,7 +76,7 @@ const supportModal = document.getElementById('support-modal');
 const closeSupportModal = document.getElementById('close-support-modal');
 const supportForm = document.getElementById('support-form');
 const supportMessageInput = document.getElementById('support-message-input');
-const SUPPORT_WHATSAPP_NUMBER = "201227095092"; // رقم الدعم الفني
+const SUPPORT_WHATSAPP_NUMBER = "201554842095"; // رقم الدعم الفني الجديد
 
 let isSignUpMode = true;
 let currentLang = localStorage.getItem('syf_lang') || 'ar';
@@ -211,7 +211,7 @@ if (supportForm) {
 
         const whatsappUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(fullMessage)}`;
         
-        // فتح الواتساب
+        // فتح الواتساب في نافذة جديدة
         window.open(whatsappUrl, '_blank');
         
         supportModal.style.display = 'none';

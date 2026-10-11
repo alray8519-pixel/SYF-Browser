@@ -22,6 +22,10 @@
         </div>
 
         <div class="top-bar-end">
+            <!-- زر الدعم الفني -->
+            <button class="icon-btn" id="support-btn" title="الدعم الفني">
+                <i class="fa-solid fa-headset"></i>
+            </button>
             <button class="icon-btn" id="bg-btn" title="تغيير الخلفية">
                 <i class="fa-solid fa-image"></i>
             </button>
@@ -68,6 +72,59 @@
             <div class="shortcut-item add-shortcut" id="add-shortcut-btn">
                 <div class="shortcut-icon add-icon"><i class="fa-solid fa-plus"></i></div>
                 <span class="shortcut-label" data-i18n="addShortcut">إضافة موقع</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Shortcut Modal -->
+    <div class="modal" id="shortcut-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-shortcut-modal">&times;</span>
+            <h2 data-i18n="addShortcutTitle" style="margin-bottom: 20px; text-align: center;">إضافة اختصار جديد</h2>
+            <form id="shortcut-form">
+                <div class="form-group">
+                    <label data-i18n="siteNameLabel">اسم الموقع</label>
+                    <input type="text" id="shortcut-title" required placeholder="مثال: جوجل">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="siteUrlLabel">رابط الموقع (URL)</label>
+                    <input type="url" id="shortcut-url" required placeholder="https://example.com">
+                </div>
+                <button type="submit" class="submit-btn" data-i18n="saveBtn">حفظ الاختصار</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Support Modal -->
+    <div class="modal" id="support-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-support-modal">&times;</span>
+            <h2 style="margin-bottom: 20px; text-align: center;">الدعم الفني والاتصال</h2>
+            <form id="support-form">
+                <div class="form-group">
+                    <label>الاسم</label>
+                    <input type="text" id="support-name-input" required placeholder="أدخل اسمك...">
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="support-email-input" required placeholder="name@example.com">
+                </div>
+                <div class="form-group">
+                    <label>تفاصيل المشكلة أو الرسالة</label>
+                    <textarea id="support-message-input" required placeholder="اكتب مشكلتك هنا..." style="width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 1px solid #dadce0; outline: none; resize: none;"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">إرسال الرسالة</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div class="modal" id="admin-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-btn" id="close-admin-modal">&times;</span>
+            <h2 style="margin-bottom: 20px; text-align: center;">لوحة تحكم الأدمن - رسائل الدعم</h2>
+            <div id="admin-messages-list" style="max-height: 350px; overflow-y: auto;">
+                <!-- Messages dynamic load -->
             </div>
         </div>
     </div>
@@ -136,6 +193,12 @@
                 <button class="settings-option-btn" id="show-dev-btn">
                     <i class="fa-solid fa-code"></i>
                     <span data-i18n="devPageBtn">المطور</span>
+                </button>
+
+                <!-- خيار لوحة الأدمن (يظهر فقط للأدمن) -->
+                <button class="settings-option-btn" id="admin-panel-btn" style="display: none; background: #feefe3; color: #d93025; border-color: #fce8e6;">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>لوحة تحكم الأدمن</span>
                 </button>
             </div>
         </div>

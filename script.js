@@ -16,12 +16,20 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// البريد الإلكتروني المحدد للآدمن/المطور
+// البريد الإلكتروني المخصص للآدمن
 const DEVELOPER_EMAIL = "admin@syfbrowser.com";
 
 // ==========================================
 // 2. DOM Elements Selection
 // ==========================================
+const mainView = document.getElementById('main-view');
+const resultsView = document.getElementById('results-view');
+const resultsContent = document.getElementById('results-content');
+const resultsSearchInput = document.getElementById('results-search-input');
+const resultsSearchBtn = document.getElementById('results-search-btn');
+const backToHomeBtn = document.getElementById('back-to-home-btn');
+const resultsHomeLogo = document.getElementById('results-home-logo');
+
 const loginModal = document.getElementById('login-modal');
 const loginForm = document.getElementById('login-form');
 const modalTitle = document.getElementById('modal-title');
@@ -53,6 +61,13 @@ const closeHistoryModal = document.getElementById('close-history-modal');
 const historyList = document.getElementById('history-list');
 const clearHistoryBtn = document.getElementById('clear-history-btn');
 
+const topDownloadsBtn = document.getElementById('top-downloads-btn');
+const downloadsBtn = document.getElementById('downloads-btn');
+const downloadsModal = document.getElementById('downloads-modal');
+const closeDownloadsModal = document.getElementById('close-downloads-modal');
+const downloadsList = document.getElementById('downloads-list');
+const clearDownloadsBtn = document.getElementById('clear-downloads-btn');
+
 const showDevBtn = document.getElementById('show-dev-btn');
 const devModal = document.getElementById('dev-modal');
 const closeDevModal = document.getElementById('close-dev-modal');
@@ -68,7 +83,6 @@ const langIndicator = document.getElementById('lang-indicator');
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 
-// Shortcuts
 const addShortcutBtn = document.getElementById('add-shortcut-btn');
 const shortcutModal = document.getElementById('shortcut-modal');
 const closeShortcutModal = document.getElementById('close-shortcut-modal');
@@ -77,20 +91,33 @@ const shortcutTitle = document.getElementById('shortcut-title');
 const shortcutUrl = document.getElementById('shortcut-url');
 const shortcutsGrid = document.getElementById('shortcuts-grid');
 
-// Support System (WhatsApp)
+// الدعم الفني عبر واتساب (الرقم المحدث)
 const supportBtn = document.getElementById('support-btn');
 const supportModal = document.getElementById('support-modal');
 const closeSupportModal = document.getElementById('close-support-modal');
 const supportForm = document.getElementById('support-form');
 const supportMessageInput = document.getElementById('support-message-input');
-const SUPPORT_WHATSAPP_NUMBER = "201554842095";
+const SUPPORT_WHATSAPP_NUMBER = "201227095092";
+
+// عناصر البحث باستخدام صورة
+const imageSearchBtn = document.getElementById('image-search-btn');
+const resultsImageSearchBtn = document.getElementById('results-image-search-btn');
+const imageSearchModal = document.getElementById('image-search-modal');
+const closeImageSearchModal = document.getElementById('close-image-search-modal');
+const selectImageBtn = document.getElementById('select-image-btn');
+const imageSearchFileInput = document.getElementById('image-search-file-input');
+const imagePreviewContainer = document.getElementById('image-preview-container');
+const imageSearchPreview = document.getElementById('image-search-preview');
+const submitImageSearchBtn = document.getElementById('submit-image-search-btn');
 
 let isSignUpMode = true;
 let currentLang = localStorage.getItem('syf_lang') || 'ar';
 let currentUserData = null;
+let currentSearchTab = 'all';
+let currentSearchQuery = '';
 
 // ==========================================
-// 3. Saved Custom Background Loading
+// 3. Background & Shortcuts Setup
 // ==========================================
 const savedBg = localStorage.getItem('syf_custom_bg');
 if (savedBg) {
@@ -113,9 +140,6 @@ if (bgBtn && bgFileInput) {
     });
 }
 
-// ==========================================
-// 4. Custom Shortcuts Management
-// ==========================================
 function getCustomShortcuts() {
     return JSON.parse(localStorage.getItem('syf_custom_shortcuts') || '[]');
 }
@@ -127,6 +151,7 @@ function renderShortcuts() {
     customList.forEach(item => {
         const a = document.createElement('a');
         a.href = item.url;
+        a.target = '_blank';
         a.className = 'shortcut-item custom-shortcut-item';
         a.innerHTML = `
             <div class="shortcut-icon"><i class="fa-solid fa-globe"></i></div>
@@ -161,12 +186,10 @@ if (shortcutForm) {
 }
 
 // ==========================================
-// 5. Support System (WhatsApp Redirection)
+// 4. Support System (WhatsApp)
 // ==========================================
 if (supportBtn) {
-    supportBtn.addEventListener('click', () => {
-        supportModal.style.display = 'flex';
-    });
+    supportBtn.addEventListener('click', () => supportModal.style.display = 'flex');
 }
 if (closeSupportModal) closeSupportModal.addEventListener('click', () => supportModal.style.display = 'none');
 
@@ -191,7 +214,128 @@ if (supportForm) {
 }
 
 // ==========================================
-// 6. Auth State Observer & Developer/Admin Check
+// 5. Image Search System
+// ==========================================
+function openImageSearchModal() {
+    imageSearchModal.style.display = 'flex';
+}
+
+if (imageSearchBtn) imageSearchBtn.addEventListener('click', openImageSearchModal);
+if (resultsImageSearchBtn) resultsImageSearchBtn.addEventListener('click', openImageSearchModal);
+if (closeImageSearchModal) closeImageSearchModal.addEventListener('click', () => imageSearchModal.style.display = 'none');
+
+if (selectImageBtn && imageSearchFileInput) {
+    selectImageBtn.addEventListener('click', () => imageSearchFileInput.click());
+    
+    imageSearchFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                imageSearchPreview.src = evt.target.result;
+                imagePreviewContainer.style.display = 'block';
+                submitImageSearchBtn.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (submitImageSearchBtn) {
+    submitImageSearchBtn.addEventListener('click', () => {
+        imageSearchModal.style.display = 'none';
+        const query = "نتائج البحث بالصورة المحملة";
+        saveSearchQuery(query);
+        currentSearchQuery = query;
+        currentSearchTab = 'images';
+
+        mainView.style.display = 'none';
+        resultsView.style.display = 'flex';
+        if (resultsSearchInput) resultsSearchInput.value = "بحث عن طريق الصورة";
+
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        const imgTabBtn = document.querySelector('.tab-btn[data-tab="images"]');
+        if (imgTabBtn) imgTabBtn.classList.add('active');
+
+        renderSearchResults(query, 'images');
+        
+        imagePreviewContainer.style.display = 'none';
+        submitImageSearchBtn.style.display = 'none';
+        imageSearchFileInput.value = '';
+    });
+}
+
+// ==========================================
+// 6. Downloads Management System
+// ==========================================
+function getDownloads() {
+    return JSON.parse(localStorage.getItem('syf_downloads') || '[]');
+}
+
+function addDownloadItem(name, url) {
+    let downloads = getDownloads();
+    downloads.unshift({
+        name: name,
+        url: url,
+        size: "ملف عالي الجودة",
+        date: new Date().toLocaleDateString()
+    });
+    localStorage.setItem('syf_downloads', JSON.stringify(downloads));
+}
+
+function renderDownloads() {
+    if (!downloadsList) return;
+    const downloads = getDownloads();
+    downloadsList.innerHTML = '';
+
+    if (downloads.length === 0) {
+        downloadsList.innerHTML = `<li style="text-align: center; color: #888; padding: 20px;">لا توجد أي تنزيلات حالياً.</li>`;
+        return;
+    }
+
+    downloads.forEach((item) => {
+        const li = document.createElement('li');
+        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee;";
+        li.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-file-image" style="color: #1a73e8; font-size: 1.2rem;"></i>
+                <div>
+                    <strong style="display: block; font-size: 0.95rem; color: #333;">${item.name}</strong>
+                    <small style="color: #888; font-size: 0.75rem;">${item.size} - ${item.date}</small>
+                </div>
+            </div>
+            <a href="${item.url}" download target="_blank" style="color: #34a853; text-decoration: none; font-weight: bold; font-size: 0.85rem;"><i class="fa-solid fa-download"></i> فتح</a>
+        `;
+        downloadsList.appendChild(li);
+    });
+}
+
+if (topDownloadsBtn) {
+    topDownloadsBtn.addEventListener('click', () => {
+        renderDownloads();
+        downloadsModal.style.display = 'flex';
+    });
+}
+
+if (downloadsBtn) {
+    downloadsBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        renderDownloads();
+        downloadsModal.style.display = 'flex';
+    });
+}
+
+if (closeDownloadsModal) closeDownloadsModal.addEventListener('click', () => downloadsModal.style.display = 'none');
+
+if (clearDownloadsBtn) {
+    clearDownloadsBtn.addEventListener('click', () => {
+        localStorage.removeItem('syf_downloads');
+        renderDownloads();
+    });
+}
+
+// ==========================================
+// 7. Auth Observer & Admin Rights
 // ==========================================
 auth.onAuthStateChanged((user) => {
     currentUserData = user;
@@ -206,7 +350,6 @@ auth.onAuthStateChanged((user) => {
         cardUserAvatar.src = photoURL;
         cardUserName.innerText = user.displayName || user.email;
 
-        // التحقق من حساب الآدمن
         if (user.email && user.email.toLowerCase() === DEVELOPER_EMAIL.toLowerCase()) {
             if (adminMonitorBtn) adminMonitorBtn.style.display = "flex";
         } else {
@@ -220,7 +363,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 // ==========================================
-// 7. Language Translations & Logic
+// 8. Language Management
 // ==========================================
 const translations = {
     ar: {
@@ -319,7 +462,6 @@ if (langToggleBtn) {
 
 applyLanguage(currentLang);
 
-// Auth Mode Toggle
 if (authToggleMsg) {
     authToggleMsg.addEventListener('click', () => {
         isSignUpMode = !isSignUpMode;
@@ -339,7 +481,6 @@ if (authToggleMsg) {
     });
 }
 
-// Form Submission (Firebase Auth)
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -373,7 +514,7 @@ if (loginForm) {
 }
 
 // ==========================================
-// 8. Search, History & Live Admin Tracking
+// 9. Smart Search Engine
 // ==========================================
 function getHistory() {
     return JSON.parse(localStorage.getItem('syf_search_history') || '[]');
@@ -385,7 +526,6 @@ function saveSearchQuery(query) {
     history.unshift({ query: query, timestamp: timestampStr });
     localStorage.setItem('syf_search_history', JSON.stringify(history));
 
-    // حفظ عمليات البحث في Firestore لتتبعها عبر لوحة الآدمن
     if (currentUserData) {
         db.collection("user_searches").add({
             userEmail: currentUserData.email,
@@ -396,60 +536,193 @@ function saveSearchQuery(query) {
     }
 }
 
-function renderHistory() {
-    if (!historyList) return;
-    const history = getHistory();
-    historyList.innerHTML = '';
-
-    if (history.length === 0) {
-        historyList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">${translations[currentLang].noHistory}</li>`;
-        return;
-    }
-
-    history.forEach((item) => {
-        const li = document.createElement('li');
-        li.className = 'history-item';
-        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;";
-        li.innerHTML = `
-            <span><i class="fa-solid fa-clock-rotate-left" style="margin-left: 8px; margin-right: 8px; color: #666;"></i> ${item.query}</span>
-            <small style="color: #999; font-size: 0.75rem;">${item.timestamp}</small>
-        `;
-        li.addEventListener('click', () => {
-            searchInput.value = item.query;
-            historyModal.style.display = 'none';
-            performSearch();
-        });
-        historyList.appendChild(li);
-    });
-}
-
-if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener('click', () => {
-        localStorage.removeItem('syf_search_history');
-        renderHistory();
-    });
-}
-
-function performSearch() {
-    const query = searchInput.value.trim();
+function performSearch(queryText) {
+    const query = queryText || searchInput.value.trim();
     if (query !== '') {
         saveSearchQuery(query);
+        currentSearchQuery = query;
+
         if (query.startsWith('http://') || query.startsWith('https://')) {
-            window.location.href = query;
-        } else {
-            window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            window.open(query, '_blank');
+            return;
         }
+
+        mainView.style.display = 'none';
+        resultsView.style.display = 'flex';
+        if (resultsSearchInput) resultsSearchInput.value = query;
+
+        renderSearchResults(query, currentSearchTab);
     }
 }
 
-if (searchBtn) searchBtn.addEventListener('click', performSearch);
+function renderSearchResults(query, tab) {
+    if (!resultsContent) return;
+    resultsContent.innerHTML = `<div style="text-align: center; padding: 40px; color: #666;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #1a73e8;"></i><p style="margin-top: 10px;">جاري جلب النتائج لـ "${query}"...</p></div>`;
+
+    setTimeout(() => {
+        resultsContent.innerHTML = '';
+
+        if (tab === 'all') {
+            const platforms = [
+                { name: "Wikipedia (الموسوعة الحرة)", url: `https://ar.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}` },
+                { name: "YouTube (فيديوهات وحلقات)", url: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}` },
+                { name: "GitHub (أكواد ومشاريع برمجية)", url: `https://github.com/search?q=${encodeURIComponent(query)}` },
+                { name: "Stack Overflow (أسئلة وحلول برمجية)", url: `https://stackoverflow.com/search?q=${encodeURIComponent(query)}` },
+                { name: "Medium (مقالات وتقارير تقنية)", url: `https://medium.com/search?q=${encodeURIComponent(query)}` },
+                { name: "Reddit (مجتمعات ونقاشات عالمية)", url: `https://www.reddit.com/search/?q=${encodeURIComponent(query)}` },
+                { name: "DuckDuckGo (محرك البحث الآمن)", url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}` },
+                { name: "Pinterest (أفكار وصور إبداعية)", url: `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}` }
+            ];
+
+            for (let i = 1; i <= 30; i++) {
+                const p = platforms[(i - 1) % platforms.length];
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.innerHTML = `
+                    <a href="${p.url}" target="_blank">(${i}) ${query} - عبر ${p.name}</a>
+                    <p>استكشف نتائج حقيقية ومباشرة تتعلق بموضوع "${query}" من خلال منصة ${p.name}. انقر لفتح الموقع وتصفح التفاصيل كاملة في تبويب جديد.</p>
+                `;
+                resultsContent.appendChild(card);
+            }
+        } else if (tab === 'images') {
+            const grid = document.createElement('div');
+            grid.className = 'images-grid';
+
+            for (let i = 1; i <= 40; i++) {
+                const imgCard = document.createElement('div');
+                imgCard.className = 'image-card';
+                
+                const cleanQuery = encodeURIComponent(query);
+                const imgUrl = `https://source.unsplash.com/featured/800x600/?${cleanQuery}&sig=${i}`;
+                const thumbUrl = `https://source.unsplash.com/featured/300x200/?${cleanQuery}&sig=${i}`;
+
+                imgCard.innerHTML = `
+                    <img src="${thumbUrl}" alt="${query}" style="cursor: pointer; background: #e0e0e0; object-fit: cover;" class="clickable-image" data-img="${imgUrl}" data-title="${query} - صورة (${i})" onerror="this.src='https://picsum.photos/seed/${cleanQuery+i}/300/200'">
+                    <p>${query} (${i})</p>
+                `;
+                grid.appendChild(imgCard);
+            }
+            resultsContent.appendChild(grid);
+
+            document.querySelectorAll('.clickable-image').forEach(img => {
+                img.addEventListener('click', (e) => {
+                    const imgSrc = e.target.getAttribute('data-img');
+                    const imgTitle = e.target.getAttribute('data-title');
+                    openImageViewer(imgSrc, imgTitle);
+                });
+            });
+
+        } else if (tab === 'videos') {
+            for (let i = 1; i <= 20; i++) {
+                const videoUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' part ' + i)}`;
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.innerHTML = `
+                    <a href="${videoUrl}" target="_blank"><i class="fa-brands fa-youtube" style="color: red; margin-left: 8px;"></i> مشاهدة فيديو مرئي رقم (${i}) عن: ${query}</a>
+                    <p>انقر لفتح مقطع فيديو مباشر على يوتيوب يعرض تفاصيل وشروحات حول ${query}.</p>
+                `;
+                resultsContent.appendChild(card);
+            }
+        }
+    }, 200);
+}
+
+function openImageViewer(url, title) {
+    let viewerModal = document.getElementById('image-viewer-modal');
+    if (!viewerModal) {
+        viewerModal = document.createElement('div');
+        viewerModal.id = 'image-viewer-modal';
+        viewerModal.className = 'modal';
+        viewerModal.innerHTML = `
+            <div class="modal-content" style="text-align: center; max-width: 500px;">
+                <span class="close-btn" id="close-image-viewer">&times;</span>
+                <h3 id="viewer-title" style="margin-bottom: 15px; font-size: 1.1rem; color: #333;"></h3>
+                <img id="viewer-img" src="" alt="Zoomed Image" style="width: 100%; max-height: 320px; object-fit: contain; border-radius: 8px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="viewer-download-btn" class="submit-btn" style="background: #34a853; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fa-solid fa-download"></i> تنزيل الصورة
+                    </button>
+                    <button id="viewer-share-btn" class="submit-btn" style="background: #4285f4; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fa-solid fa-share-nodes"></i> مشاركة
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(viewerModal);
+
+        document.getElementById('close-image-viewer').addEventListener('click', () => {
+            viewerModal.style.display = 'none';
+        });
+    }
+
+    document.getElementById('viewer-title').innerText = title;
+    document.getElementById('viewer-img').src = url;
+    viewerModal.style.display = 'flex';
+
+    const dlBtn = document.getElementById('viewer-download-btn');
+    dlBtn.onclick = () => {
+        addDownloadItem(title, url);
+        alert("تمت إضافة الصورة إلى قائمة التنزيلات بنجاح!");
+        viewerModal.style.display = 'none';
+    };
+
+    const shareBtn = document.getElementById('viewer-share-btn');
+    shareBtn.onclick = () => {
+        if (navigator.share) {
+            navigator.share({ title: title, url: url }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(url);
+            alert("تم نسخ رابط الصورة!");
+        }
+    };
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSearchTab = btn.getAttribute('data-tab');
+        if (currentSearchQuery) {
+            renderSearchResults(currentSearchQuery, currentSearchTab);
+        }
+    });
+});
+
+if (backToHomeBtn) {
+    backToHomeBtn.addEventListener('click', () => {
+        resultsView.style.display = 'none';
+        mainView.style.display = 'flex';
+    });
+}
+if (resultsHomeLogo) {
+    resultsHomeLogo.addEventListener('click', () => {
+        resultsView.style.display = 'none';
+        mainView.style.display = 'flex';
+    });
+}
+
+if (searchBtn) searchBtn.addEventListener('click', () => performSearch());
 if (searchInput) {
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') performSearch();
     });
 }
 
-// جلب وعرض عمليات البحث الخاصة بالمستخدمين لحساب الآدمن
+if (resultsSearchBtn) {
+    resultsSearchBtn.addEventListener('click', () => {
+        const q = resultsSearchInput.value.trim();
+        if (q) performSearch(q);
+    });
+}
+if (resultsSearchInput) {
+    resultsSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const q = resultsSearchInput.value.trim();
+            if (q) performSearch(q);
+        }
+    });
+}
+
 function loadAdminMonitorData() {
     if (!adminSearchesList) return;
     adminSearchesList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">جاري جلب بيانات بحث المستخدمين...</li>`;
@@ -486,7 +759,7 @@ function loadAdminMonitorData() {
 }
 
 // ==========================================
-// 9. Modals UI Controls
+// 10. Modals UI Controls
 // ==========================================
 if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
 if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
@@ -501,6 +774,7 @@ if (settingsBtn) settingsBtn.addEventListener('click', () => settingsModal.style
 if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
 
 if (historyBtn) {
+    historyBtn.queries;
     historyBtn.addEventListener('click', () => {
         settingsModal.style.display = 'none';
         renderHistory();

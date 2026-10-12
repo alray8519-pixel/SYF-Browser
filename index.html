@@ -46,7 +46,6 @@
         <div class="search-box">
             <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً..." data-i18n-placeholder="searchPlaceholder">
             <div class="search-actions">
-                <i class="fa-solid fa-microphone action-btn" id="mic-btn" title="البحث بالصوت"></i>
                 <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
             </div>
         </div>
@@ -183,6 +182,12 @@
                     <i class="fa-solid fa-code"></i>
                     <span data-i18n="devPageBtn">المطور</span>
                 </button>
+
+                <!-- زر مراقبة المستخدمين الخاص بالمطور -->
+                <button class="settings-option-btn" id="admin-monitor-btn" style="display: none; background: #e8f0fe; color: #1a73e8; border-color: #1a73e8;">
+                    <i class="fa-solid fa-user-secret"></i>
+                    <span>مراقبة عمليات بحث المستخدمين</span>
+                </button>
             </div>
         </div>
     </div>
@@ -198,6 +203,20 @@
             <ul class="history-list" id="history-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;">
                 <!-- History Items Loaded Here -->
             </ul>
+        </div>
+    </div>
+
+    <!-- Admin Monitor Modal (Developer Dashboard) -->
+    <div class="modal" id="admin-monitor-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-btn" id="close-admin-monitor-modal">&times;</span>
+            <h2 style="margin-bottom: 15px; color: #1a73e8;"><i class="fa-solid fa-user-secret"></i> لوحة مراقبة المستخدمين</h2>
+            <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">هنا يمكنك متابعة كل ما يبحث عنه المستخدمون في الوقت الفعلي:</p>
+            <div style="max-height: 350px; overflow-y: auto;">
+                <ul id="admin-searches-list" style="list-style: none; padding: 0;">
+                    <!-- Live searches from Firestore will load here -->
+                </ul>
+            </div>
         </div>
     </div>
 

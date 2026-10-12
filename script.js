@@ -1,209 +1,203 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl" id="html-root">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYF Browser</title>
-    <!-- App Favicon -->
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+const firebaseConfig = {
+    apiKey: "AIzaSyAk6UmlYdek_I7Jq5ZdRNVPJoyMmUArQeY",
+    authDomain: "syf-browser.firebaseapp.com",
+    projectId: "syf-browser",
+    storageBucket: "syf-browser.firebasestorage.app",
+    messagingSenderId: "458736540441",
+    appId: "1:458736540441:web:2e7da0fbfec1e17f2b8388"
+};
 
-    <!-- Top Navigation Bar -->
-    <div class="top-bar">
-        <div class="top-bar-start">
-            <div id="user-badge-container">
-                <div id="user-avatar-btn" class="user-avatar-wrapper" style="display: none;">
-                    <img id="top-user-avatar" src="" alt="User Avatar">
-                </div>
-            </div>
-        </div>
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const auth = firebase.auth();
+const db = firebase.firestore();
+const DEVELOPER_EMAIL = "admin@syfbrowser.com";
 
-        <div class="top-bar-end">
-            <!-- زر الدعم الفني عبر واتساب -->
-            <button class="icon-btn" id="support-btn" title="الدعم الفني عبر واتساب">
-                <i class="fa-brands fa-whatsapp"></i>
-            </button>
+const mainView = document.getElementById('main-view');
+const resultsView = document.getElementById('results-view');
+const googleResultsIframe = document.getElementById('google-results-iframe');
+const backToHomeBtn = document.getElementById('back-to-home-btn');
 
-            <!-- زر التنزيلات -->
-            <button class="icon-btn" id="top-downloads-btn" title="التنزيلات">
-                <i class="fa-solid fa-download"></i>
-            </button>
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
 
-            <button class="icon-btn" id="bg-btn" title="تغيير الخلفية">
-                <i class="fa-solid fa-image"></i>
-            </button>
-            <button class="icon-btn" id="settings-btn" title="الإعدادات">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-            <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
-        </div>
-    </div>
+const loginModal = document.getElementById('login-modal');
+const loginForm = document.getElementById('login-form');
+const modalTitle = document.getElementById('modal-title');
+const nameGroup = document.getElementById('name-group');
+const usernameInput = document.getElementById('username-input');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginSubmitBtn = document.getElementById('login-submit-btn');
+const authToggleMsg = document.getElementById('auth-toggle-msg');
 
-    <!-- Main Home View -->
-    <div id="main-view">
-        <div class="logo" id="home-logo">
-            <span class="char-s">S</span><span class="char-y">Y</span><span class="char-f">F</span>
-        </div>
+const userAvatarBtn = document.getElementById('user-avatar-btn');
+const topUserAvatar = document.getElementById('top-user-avatar');
+const profileModal = document.getElementById('profile-modal');
+const closeProfileModal = document.getElementById('close-profile-modal');
+const cardUserAvatar = document.getElementById('card-user-avatar');
+const cardUserName = document.getElementById('card-user-name');
+const logoutBtn = document.getElementById('logout-btn');
 
-        <!-- Search Box -->
-        <div class="search-box">
-            <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً...">
-            <div class="search-actions">
-                <i class="fa-solid fa-camera action-btn" id="image-search-btn" title="البحث باستخدام صورة"></i>
-                <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
-            </div>
-        </div>
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettingsModal = document.getElementById('close-settings-modal');
 
-        <!-- Shortcuts -->
-        <div class="shortcuts-container" id="shortcuts-grid">
-            <a href="https://www.youtube.com" class="shortcut-item youtube">
-                <div class="shortcut-icon"><i class="fa-brands fa-youtube"></i></div>
-                <span class="shortcut-label">يوتيوب</span>
-            </a>
-            <a href="https://www.instagram.com" class="shortcut-item instagram">
-                <div class="shortcut-icon"><i class="fa-brands fa-instagram"></i></div>
-                <span class="shortcut-label">إنستغرام</span>
-            </a>
-            <a href="https://www.facebook.com" class="shortcut-item facebook">
-                <div class="shortcut-icon"><i class="fa-brands fa-facebook-f"></i></div>
-                <span class="shortcut-label">فيسبوك</span>
-            </a>
-            <a href="https://www.netflix.com" class="shortcut-item netflix">
-                <div class="shortcut-icon"><i class="fa-solid fa-film"></i></div>
-                <span class="shortcut-label">نتفليكس</span>
-            </a>
-            <div class="shortcut-item add-shortcut" id="add-shortcut-btn">
-                <div class="shortcut-icon add-icon"><i class="fa-solid fa-plus"></i></div>
-                <span class="shortcut-label">إضافة موقع</span>
-            </div>
-        </div>
-    </div>
+const bgBtn = document.getElementById('bg-btn');
+const bgFileInput = document.getElementById('bg-file-input');
 
-    <!-- Browser Results View (يعرض جوجل بالكامل داخل متصفحك) -->
-    <div id="results-view" style="display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; flex-direction: column; background: #fff; z-index: 50;">
-        <div style="display: flex; align-items: center; padding: 10px 20px; background: #f1f3f4; border-bottom: 1px solid #dadce0; gap: 15px;">
-            <button id="back-to-home-btn" class="icon-btn" style="background: #fff; color: #333;" title="الرئيسية">
-                <i class="fa-solid fa-house"></i>
-            </button>
-            <span style="font-weight: bold; color: #4285f4; font-size: 1.2rem;">SYF Browser - Google Search</span>
-        </div>
-        <!-- iframe يعرض نتائج جوجل الرسمية الحقيقية داخل موقعك -->
-        <iframe id="google-results-iframe" src="" style="width: 100%; height: calc(100vh - 60px); border: none;"></iframe>
-    </div>
+const downloadsBtn = document.getElementById('downloads-btn');
+const topDownloadsBtn = document.getElementById('top-downloads-btn');
+const downloadsModal = document.getElementById('downloads-modal');
+const closeDownloadsModal = document.getElementById('close-downloads-modal');
+const downloadsList = document.getElementById('downloads-list');
+const clearDownloadsBtn = document.getElementById('clear-downloads-btn');
 
-    <!-- Image Search Modal -->
-    <div class="modal" id="image-search-modal">
-        <div class="modal-content" style="text-align: center;">
-            <span class="close-btn" id="close-image-search-modal">&times;</span>
-            <h2>البحث باستخدام صورة</h2>
-            <p style="color: #666; font-size: 0.9rem; margin: 15px 0;">اختر صورة للبحث عنها في Google.</p>
-            <input type="file" id="image-search-file-input" accept="image/*" style="display: none;">
-            <button id="select-image-btn" class="submit-btn" style="background: #f1f3f4; color: #333; margin-bottom: 10px;">اختر صورة</button>
-        </div>
-    </div>
+const showDevBtn = document.getElementById('show-dev-btn');
+const devModal = document.getElementById('dev-modal');
+const closeDevModal = document.getElementById('close-dev-modal');
 
-    <!-- Downloads Modal -->
-    <div class="modal" id="downloads-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-downloads-modal">&times;</span>
-            <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2>التنزيلات</h2>
-                <button class="clear-btn" id="clear-downloads-btn" style="background: #ea4335; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">مسح السجل</button>
-            </div>
-            <ul id="downloads-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;"></ul>
-        </div>
-    </div>
+const adminMonitorBtn = document.getElementById('admin-monitor-btn');
+const adminMonitorModal = document.getElementById('admin-monitor-modal');
+const closeAdminMonitorModal = document.getElementById('close-admin-monitor-modal');
+const adminSearchesList = document.getElementById('admin-searches-list');
 
-    <!-- Add Shortcut Modal -->
-    <div class="modal" id="shortcut-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-shortcut-modal">&times;</span>
-            <h2 style="margin-bottom: 20px; text-align: center;">إضافة اختصار جديد</h2>
-            <form id="shortcut-form">
-                <div class="form-group"><label>اسم الموقع</label><input type="text" id="shortcut-title" required placeholder="مثال: جوجل"></div>
-                <div class="form-group"><label>رابط الموقع (URL)</label><input type="url" id="shortcut-url" required placeholder="https://example.com"></div>
-                <button type="submit" class="submit-btn">حفظ الاختصار</button>
-            </form>
-        </div>
-    </div>
+const langToggleBtn = document.getElementById('lang-toggle-btn');
+const langIndicator = document.getElementById('lang-indicator');
 
-    <!-- Support Modal (WhatsApp) -->
-    <div class="modal" id="support-modal">
-        <div class="modal-content" style="text-align: center;">
-            <span class="close-btn" id="close-support-modal">&times;</span>
-            <div style="font-size: 3rem; color: #25d366; margin-bottom: 10px;"><i class="fa-brands fa-whatsapp"></i></div>
-            <h2 style="margin-bottom: 10px;">الدعم الفني عبر واتساب</h2>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">الرد خلال 24 ساعة.</p>
-            <form id="support-form">
-                <div class="form-group" style="text-align: right;"><textarea id="support-message-input" placeholder="اكتب استفسارك هنا..." style="width: 100%; height: 110px; padding: 12px; border-radius: 12px; border: 1px solid #dadce0; resize: none;"></textarea></div>
-                <button type="submit" class="submit-btn" style="background-color: #25d366;"><i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب</button>
-            </form>
-        </div>
-    </div>
+const supportBtn = document.getElementById('support-btn');
+const supportModal = document.getElementById('support-modal');
+const closeSupportModal = document.getElementById('close-support-modal');
+const supportForm = document.getElementById('support-form');
+const supportMessageInput = document.getElementById('support-message-input');
+const SUPPORT_WHATSAPP_NUMBER = "201227095092";
 
-    <!-- Login Modal -->
-    <div class="modal force-modal" id="login-modal" style="display: flex;">
-        <div class="modal-content">
-            <h2 id="modal-title" style="margin-bottom: 20px; text-align: center;">إنشاء حساب جديد</h2>
-            <form id="login-form">
-                <div class="form-group" id="name-group"><label>الاسم الثلاثي</label><input type="text" id="username-input" autocomplete="name" placeholder="أدخل اسمك الثلاثي..."></div>
-                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email-input" required autocomplete="username" placeholder="name@example.com"></div>
-                <div class="form-group"><label>كلمة السر</label><input type="password" id="password-input" required autocomplete="current-password" placeholder="••••••••"></div>
-                <button type="submit" class="submit-btn" id="login-submit-btn" style="margin-top: 15px;">إنشاء حساب</button>
-                <p id="auth-toggle-msg" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem; font-weight: bold;">لديك حساب بالفعل؟ تسجیل الدخول</p>
-            </form>
-        </div>
-    </div>
+let isSignUpMode = true;
+let currentLang = localStorage.getItem('syf_lang') || 'ar';
+let currentUserData = null;
 
-    <!-- Profile Modal -->
-    <div class="modal" id="profile-modal">
-        <div class="modal-content profile-card" style="text-align: center;">
-            <span class="close-btn" id="close-profile-modal">&times;</span>
-            <img id="card-user-avatar" src="" alt="Avatar" class="large-avatar" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px;">
-            <h3 id="card-user-name" style="margin-bottom: 15px;"></h3>
-            <button id="logout-btn" class="logout-action-btn" style="background: #ea4335; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer;">تسجيل الخروج</button>
-        </div>
-    </div>
+// الخلفية والاختصارات
+const savedBg = localStorage.getItem('syf_custom_bg');
+if (savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settings-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-settings-modal">&times;</span>
-            <h2 style="margin-bottom: 20px;">الإعدادات</h2>
-            <div class="settings-options" style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="settings-option-btn" id="downloads-btn" style="padding: 12px; cursor: pointer;">التنزيلات</button>
-                <button class="settings-option-btn" id="lang-toggle-btn" style="padding: 12px; cursor: pointer;">تغيير اللغة (<span id="lang-indicator">EN</span>)</button>
-                <button class="settings-option-btn" id="show-dev-btn" style="padding: 12px; cursor: pointer;">المطور</button>
-                <button class="settings-option-btn" id="admin-monitor-btn" style="display: none; padding: 12px; background: #e8f0fe; color: #1a73e8; cursor: pointer;">مراقبة عمليات البحث</button>
-            </div>
-        </div>
-    </div>
+if (bgBtn && bgFileInput) {
+    bgBtn.addEventListener('click', () => bgFileInput.click());
+    bgFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                document.body.style.backgroundImage = `url('${evt.target.result}')`;
+                localStorage.setItem('syf_custom_bg', evt.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
-    <!-- Admin Monitor Modal -->
-    <div class="modal" id="admin-monitor-modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <span class="close-btn" id="close-admin-monitor-modal">&times;</span>
-            <h2 style="margin-bottom: 15px; color: #1a73e8;">مراقبة عمليات البحث</h2>
-            <ul id="admin-searches-list" style="list-style: none; padding: 0; max-height: 350px; overflow-y: auto;"></ul>
-        </div>
-    </div>
+// الدعم الفني
+if (supportBtn) supportBtn.addEventListener('click', () => supportModal.style.display = 'flex');
+if (closeSupportModal) closeSupportModal.addEventListener('click', () => supportModal.style.display = 'none');
 
-    <!-- Developer Modal -->
-    <div class="modal" id="dev-modal">
-        <div class="modal-content" style="text-align: center;">
-            <span class="close-btn" id="close-dev-modal">&times;</span>
-            <h2>المطور</h2>
-            <p style="margin: 15px 0;">يوسف أبو الحجاج صالح - مصر - قنا</p>
-            <a href="https://www.youtube.com/@YYT_1" target="_blank" style="color: #ff0000; font-weight: bold;">زيارة القناة (@YYT_1)</a>
-        </div>
-    </div>
+if (supportForm) {
+    supportForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msg = supportMessageInput ? supportMessageInput.value.trim() : '';
+        let fullMsg = "مرحباً، أحتاج مساعدة في متصفح SYF.";
+        if (currentUserData && currentUserData.displayName) fullMsg += `\nالاسم: ${currentUserData.displayName}`;
+        if (msg) fullMsg += `\nالرسالة: ${msg}`;
+        window.open(`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(fullMsg)}`, '_blank');
+        supportModal.style.display = 'none';
+        supportForm.reset();
+    });
+}
 
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+// التنزيلات
+function getDownloads() { return JSON.parse(localStorage.getItem('syf_downloads') || '[]'); }
+function renderDownloads() {
+    if (!downloadsList) return;
+    const downloads = getDownloads();
+    downloadsList.innerHTML = downloads.length === 0 ? `<li style="text-align: center; color: #888; padding: 20px;">لا توجد تنزيلات</li>` : '';
+    downloads.forEach(item => {
+        const li = document.createElement('li');
+        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;";
+        li.innerHTML = `<span>${item.name}</span><a href="${item.url}" download target="_blank" style="color: #34a853;">فتح</a>`;
+        downloadsList.appendChild(li);
+    });
+}
+if (topDownloadsBtn) topDownloadsBtn.addEventListener('click', () => { renderDownloads(); downloadsModal.style.display = 'flex'; });
+if (downloadsBtn) downloadsBtn.addEventListener('click', () => { settingsModal.style.display = 'none'; renderDownloads(); downloadsModal.style.display = 'flex'; });
+if (closeDownloadsModal) closeDownloadsModal.addEventListener('click', () => downloadsModal.style.display = 'none');
+if (clearDownloadsBtn) clearDownloadsBtn.addEventListener('click', () => { localStorage.removeItem('syf_downloads'); renderDownloads(); });
+
+// المصادقة والآدمن
+auth.onAuthStateChanged((user) => {
+    currentUserData = user;
+    if (user) {
+        loginModal.style.display = 'none';
+        userAvatarBtn.style.display = 'block';
+        const avatar = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=1a73e8&color=fff`;
+        topUserAvatar.src = avatar;
+        cardUserAvatar.src = avatar;
+        cardUserName.innerText = user.displayName || user.email;
+        if (adminMonitorBtn) adminMonitorBtn.style.display = user.email.toLowerCase() === DEVELOPER_EMAIL.toLowerCase() ? "block" : "none";
+    } else {
+        loginModal.style.display = 'flex';
+        userAvatarBtn.style.display = 'none';
+        if (adminMonitorBtn) adminMonitorBtn.style.display = "none";
+    }
+});
+
+// إدارة البحث وعرض جوجل داخل المتصفح (iframe)
+function performSearch(queryText) {
+    const query = queryText || searchInput.value.trim();
+    if (query !== '') {
+        // حفظ في الـ Firebase للآدمن
+        if (currentUserData) {
+            db.collection("user_searches").add({
+                userEmail: currentUserData.email,
+                userName: currentUserData.displayName || "مستخدم",
+                query: query,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+
+        if (query.startsWith('http://') || query.startsWith('https://')) {
+            window.open(query, '_blank');
+            return;
+        }
+
+        // إخفاء الرئيسية وعرض جوجل الحقيقي داخل الشاشة الخاصة بك
+        mainView.style.display = 'none';
+        resultsView.style.display = 'flex';
+        
+        // استخدام رابط بديل آمن لعرض نتائج البحث داخل الـ iframe
+        googleResultsIframe.src = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+        searchInput.value = '';
+    }
+}
+
+if (searchBtn) searchBtn.addEventListener('click', () => performSearch());
+if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+
+if (backToHomeBtn) {
+    backToHomeBtn.addEventListener('click', () => {
+        resultsView.style.display = 'none';
+        mainView.style.display = 'flex';
+        googleResultsIframe.src = '';
+    });
+}
+
+// إعدادات المودال والتحكم
+if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
+if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
+if (logoutBtn) logoutBtn.addEventListener('click', () => auth.signOut().then(() => profileModal.style.display = 'none'));
+if (settingsBtn) settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
+if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
+if (showDevBtn) showDevBtn.addEventListener('click', () => { settingsModal.style.display = 'none'; devModal.style.display = 'flex'; });
+if (closeDevModal) closeDevModal.addEventListener('click', () => devModal.style.display = 'none');
+
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal') && !e.target.classList.contains('force-modal')) e.target.style.display = 'none';
+});

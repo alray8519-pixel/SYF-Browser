@@ -50,10 +50,9 @@
 
         <!-- Search Box -->
         <div class="search-box">
-            <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً..." data-i18n-placeholder="searchPlaceholder">
+            <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً...">
             <div class="search-actions">
-                <!-- زر البحث باستخدام صورة -->
-                <i class="fa-solid fa-camera action-btn" id="image-search-btn" title="البحث باستخدام صورة من الهاتف"></i>
+                <i class="fa-solid fa-camera action-btn" id="image-search-btn" title="البحث باستخدام صورة"></i>
                 <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
             </div>
         </div>
@@ -78,62 +77,31 @@
             </a>
             <div class="shortcut-item add-shortcut" id="add-shortcut-btn">
                 <div class="shortcut-icon add-icon"><i class="fa-solid fa-plus"></i></div>
-                <span class="shortcut-label" data-i18n="addShortcut">إضافة موقع</span>
+                <span class="shortcut-label">إضافة موقع</span>
             </div>
         </div>
     </div>
 
-    <!-- Internal Search Results View (صفحة النتائج داخل الموقع) -->
-    <div id="results-view" style="display: none;">
-        <div class="results-header">
-            <div class="results-top">
-                <div class="logo results-logo" id="results-home-logo">
-                    <span class="char-s">S</span><span class="char-y">Y</span><span class="char-f">F</span>
-                </div>
-                <div class="search-box results-search-box">
-                    <input type="text" class="search-input" id="results-search-input" placeholder="ابحث في SYF...">
-                    <div class="search-actions">
-                        <i class="fa-solid fa-magnifying-glass action-btn" id="results-search-btn" title="بحث"></i>
-                    </div>
-                </div>
-                <button class="icon-btn back-btn" id="back-to-home-btn" title="الرئيسية">
-                    <i class="fa-solid fa-house"></i>
-                </button>
-            </div>
-            <!-- Tabs (الكل - صور - فيديوهات) -->
-            <div class="results-tabs">
-                <button class="tab-btn active" data-tab="all"><i class="fa-solid fa-magnifying-glass"></i> الكل</button>
-                <button class="tab-btn" data-tab="images"><i class="fa-solid fa-image"></i> صور</button>
-                <button class="tab-btn" data-tab="videos"><i class="fa-solid fa-video"></i> فيديوهات</button>
-            </div>
+    <!-- Browser Results View (يعرض جوجل بالكامل داخل متصفحك) -->
+    <div id="results-view" style="display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; flex-direction: column; background: #fff; z-index: 50;">
+        <div style="display: flex; align-items: center; padding: 10px 20px; background: #f1f3f4; border-bottom: 1px solid #dadce0; gap: 15px;">
+            <button id="back-to-home-btn" class="icon-btn" style="background: #fff; color: #333;" title="الرئيسية">
+                <i class="fa-solid fa-house"></i>
+            </button>
+            <span style="font-weight: bold; color: #4285f4; font-size: 1.2rem;">SYF Browser - Google Search</span>
         </div>
-
-        <div class="results-content" id="results-content">
-            <!-- النتائج تعرض هنا داخل موقعك -->
-        </div>
+        <!-- iframe يعرض نتائج جوجل الرسمية الحقيقية داخل موقعك -->
+        <iframe id="google-results-iframe" src="" style="width: 100%; height: calc(100vh - 60px); border: none;"></iframe>
     </div>
 
     <!-- Image Search Modal -->
     <div class="modal" id="image-search-modal">
         <div class="modal-content" style="text-align: center;">
             <span class="close-btn" id="close-image-search-modal">&times;</span>
-            <div style="font-size: 2.5rem; color: #1a73e8; margin-bottom: 10px;">
-                <i class="fa-solid fa-camera"></i>
-            </div>
-            <h2 style="margin-bottom: 10px;">البحث باستخدام صورة</h2>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">
-                اختر صورة من جهازك للبحث عنها.
-            </p>
+            <h2>البحث باستخدام صورة</h2>
+            <p style="color: #666; font-size: 0.9rem; margin: 15px 0;">اختر صورة للبحث عنها في Google.</p>
             <input type="file" id="image-search-file-input" accept="image/*" style="display: none;">
-            <div id="image-preview-container" style="display: none; margin-bottom: 15px;">
-                <img id="image-search-preview" src="" alt="صورة المعاينة" style="max-width: 100%; max-height: 180px; border-radius: 10px; border: 1px solid #ddd;">
-            </div>
-            <button id="select-image-btn" class="submit-btn" style="background: #f1f3f4; color: #333; margin-bottom: 10px;">
-                <i class="fa-solid fa-upload"></i> اختيار صورة
-            </button>
-            <button id="submit-image-search-btn" class="submit-btn" style="display: none;">
-                <i class="fa-solid fa-magnifying-glass"></i> بحث بالصورة
-            </button>
+            <button id="select-image-btn" class="submit-btn" style="background: #f1f3f4; color: #333; margin-bottom: 10px;">اختر صورة</button>
         </div>
     </div>
 
@@ -142,7 +110,7 @@
         <div class="modal-content">
             <span class="close-btn" id="close-downloads-modal">&times;</span>
             <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2><i class="fa-solid fa-download" style="color: #1a73e8; margin-left: 8px;"></i> التنزيلات</h2>
+                <h2>التنزيلات</h2>
                 <button class="clear-btn" id="clear-downloads-btn" style="background: #ea4335; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">مسح السجل</button>
             </div>
             <ul id="downloads-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;"></ul>
@@ -155,14 +123,8 @@
             <span class="close-btn" id="close-shortcut-modal">&times;</span>
             <h2 style="margin-bottom: 20px; text-align: center;">إضافة اختصار جديد</h2>
             <form id="shortcut-form">
-                <div class="form-group">
-                    <label>اسم الموقع</label>
-                    <input type="text" id="shortcut-title" required placeholder="مثال: جوجل">
-                </div>
-                <div class="form-group">
-                    <label>رابط الموقع (URL)</label>
-                    <input type="url" id="shortcut-url" required placeholder="https://example.com">
-                </div>
+                <div class="form-group"><label>اسم الموقع</label><input type="text" id="shortcut-title" required placeholder="مثال: جوجل"></div>
+                <div class="form-group"><label>رابط الموقع (URL)</label><input type="url" id="shortcut-url" required placeholder="https://example.com"></div>
                 <button type="submit" class="submit-btn">حفظ الاختصار</button>
             </form>
         </div>
@@ -172,21 +134,12 @@
     <div class="modal" id="support-modal">
         <div class="modal-content" style="text-align: center;">
             <span class="close-btn" id="close-support-modal">&times;</span>
-            <div style="font-size: 3rem; color: #25d366; margin-bottom: 10px;">
-                <i class="fa-brands fa-whatsapp"></i>
-            </div>
+            <div style="font-size: 3rem; color: #25d366; margin-bottom: 10px;"><i class="fa-brands fa-whatsapp"></i></div>
             <h2 style="margin-bottom: 10px;">الدعم الفني عبر واتساب</h2>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">
-                اكتب استفسارك أو مشكلتك بالأسفل وسيتم تحويلك مباشرة للواتساب، <strong>وسيتم الرد عليك خلال 24 ساعة</strong>.
-            </p>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">الرد خلال 24 ساعة.</p>
             <form id="support-form">
-                <div class="form-group" style="text-align: right;">
-                    <label>رسالتك أو تفاصيل المشكلة</label>
-                    <textarea id="support-message-input" placeholder="اكتب استفسارك هنا..." style="width: 100%; height: 110px; padding: 12px; border-radius: 12px; border: 1px solid #dadce0; outline: none; resize: none; font-size: 0.95rem;"></textarea>
-                </div>
-                <button type="submit" class="submit-btn" style="background-color: #25d366; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <i class="fa-brands fa-whatsapp"></i> الانتقال إلى واتساب للإرسال
-                </button>
+                <div class="form-group" style="text-align: right;"><textarea id="support-message-input" placeholder="اكتب استفسارك هنا..." style="width: 100%; height: 110px; padding: 12px; border-radius: 12px; border: 1px solid #dadce0; resize: none;"></textarea></div>
+                <button type="submit" class="submit-btn" style="background-color: #25d366;"><i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب</button>
             </form>
         </div>
     </div>
@@ -196,38 +149,22 @@
         <div class="modal-content">
             <h2 id="modal-title" style="margin-bottom: 20px; text-align: center;">إنشاء حساب جديد</h2>
             <form id="login-form">
-                <div class="form-group" id="name-group">
-                    <label>الاسم الثلاثي</label>
-                    <input type="text" id="username-input" autocomplete="name" placeholder="أدخل اسمك الثلاثي هنا...">
-                </div>
-                <div class="form-group">
-                    <label>البريد الإلكتروني</label>
-                    <input type="email" id="email-input" required autocomplete="username" placeholder="name@example.com">
-                </div>
-                <div class="form-group">
-                    <label>كلمة السر</label>
-                    <input type="password" id="password-input" required autocomplete="current-password" placeholder="••••••••">
-                </div>
+                <div class="form-group" id="name-group"><label>الاسم الثلاثي</label><input type="text" id="username-input" autocomplete="name" placeholder="أدخل اسمك الثلاثي..."></div>
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email-input" required autocomplete="username" placeholder="name@example.com"></div>
+                <div class="form-group"><label>كلمة السر</label><input type="password" id="password-input" required autocomplete="current-password" placeholder="••••••••"></div>
                 <button type="submit" class="submit-btn" id="login-submit-btn" style="margin-top: 15px;">إنشاء حساب</button>
-                <p id="auth-toggle-msg" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem; font-weight: bold;">
-                    لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول
-                </p>
+                <p id="auth-toggle-msg" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem; font-weight: bold;">لديك حساب بالفعل؟ تسجیل الدخول</p>
             </form>
         </div>
     </div>
 
     <!-- Profile Modal -->
     <div class="modal" id="profile-modal">
-        <div class="modal-content profile-card">
+        <div class="modal-content profile-card" style="text-align: center;">
             <span class="close-btn" id="close-profile-modal">&times;</span>
-            <div class="profile-info-box">
-                <img id="card-user-avatar" src="https://via.placeholder.com/80" alt="User Avatar" class="large-avatar">
-                <h3 id="card-user-name" class="profile-fullname"></h3>
-            </div>
-            <hr class="divider">
-            <button id="logout-btn" class="logout-action-btn">
-                <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
-            </button>
+            <img id="card-user-avatar" src="" alt="Avatar" class="large-avatar" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px;">
+            <h3 id="card-user-name" style="margin-bottom: 15px;"></h3>
+            <button id="logout-btn" class="logout-action-btn" style="background: #ea4335; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer;">تسجيل الخروج</button>
         </div>
     </div>
 
@@ -236,40 +173,12 @@
         <div class="modal-content">
             <span class="close-btn" id="close-settings-modal">&times;</span>
             <h2 style="margin-bottom: 20px;">الإعدادات</h2>
-            <div class="settings-options">
-                <button class="settings-option-btn" id="history-btn">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>سجل البحث</span>
-                </button>
-                <button class="settings-option-btn" id="downloads-btn">
-                    <i class="fa-solid fa-download"></i>
-                    <span>التنزيلات</span>
-                </button>
-                <button class="settings-option-btn" id="lang-toggle-btn">
-                    <i class="fa-solid fa-globe"></i>
-                    <span>تغيير اللغة</span> (<span id="lang-indicator">EN</span>)
-                </button>
-                <button class="settings-option-btn" id="show-dev-btn">
-                    <i class="fa-solid fa-code"></i>
-                    <span>المطور</span>
-                </button>
-                <button class="settings-option-btn" id="admin-monitor-btn" style="display: none; background: #e8f0fe; color: #1a73e8; border-color: #1a73e8;">
-                    <i class="fa-solid fa-user-secret"></i>
-                    <span>مراقبة عمليات بحث المستخدمين</span>
-                </button>
+            <div class="settings-options" style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="settings-option-btn" id="downloads-btn" style="padding: 12px; cursor: pointer;">التنزيلات</button>
+                <button class="settings-option-btn" id="lang-toggle-btn" style="padding: 12px; cursor: pointer;">تغيير اللغة (<span id="lang-indicator">EN</span>)</button>
+                <button class="settings-option-btn" id="show-dev-btn" style="padding: 12px; cursor: pointer;">المطور</button>
+                <button class="settings-option-btn" id="admin-monitor-btn" style="display: none; padding: 12px; background: #e8f0fe; color: #1a73e8; cursor: pointer;">مراقبة عمليات البحث</button>
             </div>
-        </div>
-    </div>
-
-    <!-- History Modal -->
-    <div class="modal" id="history-modal">
-        <div class="modal-content history-content">
-            <span class="close-btn" id="close-history-modal">&times;</span>
-            <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2>سجل البحث</h2>
-                <button class="clear-btn" id="clear-history-btn" style="background: #ea4335; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">مسح السجل</button>
-            </div>
-            <ul class="history-list" id="history-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;"></ul>
         </div>
     </div>
 
@@ -277,34 +186,24 @@
     <div class="modal" id="admin-monitor-modal">
         <div class="modal-content" style="max-width: 600px;">
             <span class="close-btn" id="close-admin-monitor-modal">&times;</span>
-            <h2 style="margin-bottom: 15px; color: #1a73e8;"><i class="fa-solid fa-user-secret"></i> لوحة مراقبة المستخدمين</h2>
-            <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">متابعة عمليات بحث المستخدمين:</p>
-            <div style="max-height: 350px; overflow-y: auto;">
-                <ul id="admin-searches-list" style="list-style: none; padding: 0;"></ul>
-            </div>
+            <h2 style="margin-bottom: 15px; color: #1a73e8;">مراقبة عمليات البحث</h2>
+            <ul id="admin-searches-list" style="list-style: none; padding: 0; max-height: 350px; overflow-y: auto;"></ul>
         </div>
     </div>
 
-    <!-- Developer Info Modal -->
+    <!-- Developer Modal -->
     <div class="modal" id="dev-modal">
-        <div class="modal-content">
+        <div class="modal-content" style="text-align: center;">
             <span class="close-btn" id="close-dev-modal">&times;</span>
-            <h2 style="margin-bottom: 15px;">صفحة المطور</h2>
-            <div class="developer-info">
-                <p><strong>المطور:</strong> يوسف أبو الحجاج صالح</p>
-                <p><strong>الموقع:</strong> مصر - قنا</p>
-                <br>
-                <a href="https://www.youtube.com/@YYT_1" target="_blank"><i class="fa-brands fa-youtube"></i> زيارة القناة (@YYT_1)</a>
-            </div>
+            <h2>المطور</h2>
+            <p style="margin: 15px 0;">يوسف أبو الحجاج صالح - مصر - قنا</p>
+            <a href="https://www.youtube.com/@YYT_1" target="_blank" style="color: #ff0000; font-weight: bold;">زيارة القناة (@YYT_1)</a>
         </div>
     </div>
 
-    <!-- Firebase SDK Compat Versions -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <!-- Main JavaScript File -->
     <script src="script.js"></script>
 </body>
 </html>

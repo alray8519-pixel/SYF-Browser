@@ -16,6 +16,9 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// البريد الإلكتروني المحدد للآدمن/المطور
+const DEVELOPER_EMAIL = "admin@syfbrowser.com";
+
 // ==========================================
 // 2. DOM Elements Selection
 // ==========================================
@@ -54,12 +57,16 @@ const showDevBtn = document.getElementById('show-dev-btn');
 const devModal = document.getElementById('dev-modal');
 const closeDevModal = document.getElementById('close-dev-modal');
 
+const adminMonitorBtn = document.getElementById('admin-monitor-btn');
+const adminMonitorModal = document.getElementById('admin-monitor-modal');
+const closeAdminMonitorModal = document.getElementById('close-admin-monitor-modal');
+const adminSearchesList = document.getElementById('admin-searches-list');
+
 const langToggleBtn = document.getElementById('lang-toggle-btn');
 const langIndicator = document.getElementById('lang-indicator');
 
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
-const micBtn = document.getElementById('mic-btn');
 
 // Shortcuts
 const addShortcutBtn = document.getElementById('add-shortcut-btn');
@@ -76,7 +83,7 @@ const supportModal = document.getElementById('support-modal');
 const closeSupportModal = document.getElementById('close-support-modal');
 const supportForm = document.getElementById('support-form');
 const supportMessageInput = document.getElementById('support-message-input');
-const SUPPORT_WHATSAPP_NUMBER = "201554842095"; // رقم الدعم الفني الجديد
+const SUPPORT_WHATSAPP_NUMBER = "201554842095";
 
 let isSignUpMode = true;
 let currentLang = localStorage.getItem('syf_lang') || 'ar';
@@ -107,40 +114,7 @@ if (bgBtn && bgFileInput) {
 }
 
 // ==========================================
-// 4. Voice Search (Microphone)
-// ==========================================
-if (micBtn) {
-    micBtn.addEventListener('click', () => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.lang = currentLang === 'ar' ? 'ar-SA' : 'en-US';
-            micBtn.style.color = '#ea4335';
-            recognition.start();
-
-            recognition.onresult = (e) => {
-                const transcript = e.results[0][0].transcript;
-                searchInput.value = transcript;
-                micBtn.style.color = '#5f6368';
-                performSearch();
-            };
-
-            recognition.onerror = () => {
-                micBtn.style.color = '#5f6368';
-                alert(currentLang === 'ar' ? 'تعذر التعرف على الصوت' : 'Voice recognition failed');
-            };
-
-            recognition.onend = () => {
-                micBtn.style.color = '#5f6368';
-            };
-        } else {
-            alert(currentLang === 'ar' ? 'البحث الصوتي غير مدعوم في هذا المتصفح' : 'Voice search not supported');
-        }
-    });
-}
-
-// ==========================================
-// 5. Custom Shortcuts Management
+// 4. Custom Shortcuts Management
 // ==========================================
 function getCustomShortcuts() {
     return JSON.parse(localStorage.getItem('syf_custom_shortcuts') || '[]');
@@ -187,7 +161,7 @@ if (shortcutForm) {
 }
 
 // ==========================================
-// 6. Support System (WhatsApp Redirection)
+// 5. Support System (WhatsApp Redirection)
 // ==========================================
 if (supportBtn) {
     supportBtn.addEventListener('click', () => {
@@ -210,17 +184,14 @@ if (supportForm) {
         }
 
         const whatsappUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(fullMessage)}`;
-        
-        // فتح الواتساب في نافذة جديدة
         window.open(whatsappUrl, '_blank');
-        
         supportModal.style.display = 'none';
         supportForm.reset();
     });
 }
 
 // ==========================================
-// 7. Auth State Observer
+// 6. Auth State Observer & Developer/Admin Check
 // ==========================================
 auth.onAuthStateChanged((user) => {
     currentUserData = user;
@@ -234,14 +205,22 @@ auth.onAuthStateChanged((user) => {
         topUserAvatar.src = photoURL;
         cardUserAvatar.src = photoURL;
         cardUserName.innerText = user.displayName || user.email;
+
+        // التحقق من حساب الآدمن
+        if (user.email && user.email.toLowerCase() === DEVELOPER_EMAIL.toLowerCase()) {
+            if (adminMonitorBtn) adminMonitorBtn.style.display = "flex";
+        } else {
+            if (adminMonitorBtn) adminMonitorBtn.style.display = "none";
+        }
     } else {
         loginModal.style.display = 'flex';
         userAvatarBtn.style.display = 'none';
+        if (adminMonitorBtn) adminMonitorBtn.style.display = "none";
     }
 });
 
 // ==========================================
-// 8. Language Translations & Logic
+// 7. Language Translations & Logic
 // ==========================================
 const translations = {
     ar: {
@@ -394,7 +373,7 @@ if (loginForm) {
 }
 
 // ==========================================
-// 9. Search & History
+// 8. Search, History & Live Admin Tracking
 // ==========================================
 function getHistory() {
     return JSON.parse(localStorage.getItem('syf_search_history') || '[]');
@@ -402,8 +381,19 @@ function getHistory() {
 
 function saveSearchQuery(query) {
     let history = getHistory();
-    history.unshift({ query: query, timestamp: new Date().toLocaleString() });
+    const timestampStr = new Date().toLocaleString();
+    history.unshift({ query: query, timestamp: timestampStr });
     localStorage.setItem('syf_search_history', JSON.stringify(history));
+
+    // حفظ عمليات البحث في Firestore لتتبعها عبر لوحة الآدمن
+    if (currentUserData) {
+        db.collection("user_searches").add({
+            userEmail: currentUserData.email,
+            userName: currentUserData.displayName || "مستخدم مجهول",
+            query: query,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.log("Error saving live search:", err));
+    }
 }
 
 function renderHistory() {
@@ -459,8 +449,44 @@ if (searchInput) {
     });
 }
 
+// جلب وعرض عمليات البحث الخاصة بالمستخدمين لحساب الآدمن
+function loadAdminMonitorData() {
+    if (!adminSearchesList) return;
+    adminSearchesList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">جاري جلب بيانات بحث المستخدمين...</li>`;
+
+    db.collection("user_searches")
+        .orderBy("timestamp", "desc")
+        .limit(50)
+        .get()
+        .then((snapshot) => {
+            adminSearchesList.innerHTML = '';
+            if (snapshot.empty) {
+                adminSearchesList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">لا توجد عمليات بحث مسجلة حتى الآن.</li>`;
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const timeStr = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'الآن';
+                const li = document.createElement('li');
+                li.style.cssText = "padding: 10px 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;";
+                li.innerHTML = `
+                    <div>
+                        <strong style="color: #1a73e8; display: block; font-size: 0.9rem;">${data.userName} (${data.userEmail})</strong>
+                        <span style="color: #333; font-size: 1rem;">بحث عن: <strong>${data.query}</strong></span>
+                    </div>
+                    <small style="color: #888; font-size: 0.75rem;">${timeStr}</small>
+                `;
+                adminSearchesList.appendChild(li);
+            });
+        })
+        .catch((error) => {
+            adminSearchesList.innerHTML = `<li style="text-align: center; color: #ea4335; padding: 15px;">خطأ في جلب البيانات: ${error.message}</li>`;
+        });
+}
+
 // ==========================================
-// 10. Modals UI Controls
+// 9. Modals UI Controls
 // ==========================================
 if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
 if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
@@ -490,6 +516,15 @@ if (showDevBtn) {
     });
 }
 if (closeDevModal) closeDevModal.addEventListener('click', () => devModal.style.display = 'none');
+
+if (adminMonitorBtn) {
+    adminMonitorBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        loadAdminMonitorData();
+        adminMonitorModal.style.display = 'flex';
+    });
+}
+if (closeAdminMonitorModal) closeAdminMonitorModal.addEventListener('click', () => adminMonitorModal.style.display = 'none');
 
 window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal') && !e.target.classList.contains('force-modal')) {

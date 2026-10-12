@@ -23,13 +23,6 @@ const DEVELOPER_EMAIL = "admin@syfbrowser.com";
 // 2. DOM Elements Selection
 // ==========================================
 const mainView = document.getElementById('main-view');
-const resultsView = document.getElementById('results-view');
-const resultsContent = document.getElementById('results-content');
-const resultsSearchInput = document.getElementById('results-search-input');
-const resultsSearchBtn = document.getElementById('results-search-btn');
-const backToHomeBtn = document.getElementById('back-to-home-btn');
-const resultsHomeLogo = document.getElementById('results-home-logo');
-
 const loginModal = document.getElementById('login-modal');
 const loginForm = document.getElementById('login-form');
 const modalTitle = document.getElementById('modal-title');
@@ -101,7 +94,6 @@ const SUPPORT_WHATSAPP_NUMBER = "201227095092";
 
 // عناصر البحث باستخدام صورة
 const imageSearchBtn = document.getElementById('image-search-btn');
-const resultsImageSearchBtn = document.getElementById('results-image-search-btn');
 const imageSearchModal = document.getElementById('image-search-modal');
 const closeImageSearchModal = document.getElementById('close-image-search-modal');
 const selectImageBtn = document.getElementById('select-image-btn');
@@ -113,8 +105,6 @@ const submitImageSearchBtn = document.getElementById('submit-image-search-btn');
 let isSignUpMode = true;
 let currentLang = localStorage.getItem('syf_lang') || 'ar';
 let currentUserData = null;
-let currentSearchTab = 'all';
-let currentSearchQuery = '';
 
 // ==========================================
 // 3. Background & Shortcuts Setup
@@ -214,14 +204,13 @@ if (supportForm) {
 }
 
 // ==========================================
-// 5. Image Search System
+// 5. Image Search System (Direct to Google)
 // ==========================================
 function openImageSearchModal() {
     imageSearchModal.style.display = 'flex';
 }
 
 if (imageSearchBtn) imageSearchBtn.addEventListener('click', openImageSearchModal);
-if (resultsImageSearchBtn) resultsImageSearchBtn.addEventListener('click', openImageSearchModal);
 if (closeImageSearchModal) closeImageSearchModal.addEventListener('click', () => imageSearchModal.style.display = 'none');
 
 if (selectImageBtn && imageSearchFileInput) {
@@ -244,20 +233,8 @@ if (selectImageBtn && imageSearchFileInput) {
 if (submitImageSearchBtn) {
     submitImageSearchBtn.addEventListener('click', () => {
         imageSearchModal.style.display = 'none';
-        const query = "نتائج البحث بالصورة المحملة";
-        saveSearchQuery(query);
-        currentSearchQuery = query;
-        currentSearchTab = 'images';
-
-        mainView.style.display = 'none';
-        resultsView.style.display = 'flex';
-        if (resultsSearchInput) resultsSearchInput.value = "بحث عن طريق الصورة";
-
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const imgTabBtn = document.querySelector('.tab-btn[data-tab="images"]');
-        if (imgTabBtn) imgTabBtn.classList.add('active');
-
-        renderSearchResults(query, 'images');
+        // التوجيه المباشر لموقع Google Images البحث بالصور
+        window.open("https://images.google.com/", "_blank");
         
         imagePreviewContainer.style.display = 'none';
         submitImageSearchBtn.style.display = 'none';
@@ -270,17 +247,6 @@ if (submitImageSearchBtn) {
 // ==========================================
 function getDownloads() {
     return JSON.parse(localStorage.getItem('syf_downloads') || '[]');
-}
-
-function addDownloadItem(name, url) {
-    let downloads = getDownloads();
-    downloads.unshift({
-        name: name,
-        url: url,
-        size: "ملف عالي الجودة",
-        date: new Date().toLocaleDateString()
-    });
-    localStorage.setItem('syf_downloads', JSON.stringify(downloads));
 }
 
 function renderDownloads() {
@@ -514,7 +480,7 @@ if (loginForm) {
 }
 
 // ==========================================
-// 9. Google Search Integration
+// 9. Direct Google Search Integration (التوجيه المباشر لـ Google)
 // ==========================================
 function getHistory() {
     return JSON.parse(localStorage.getItem('syf_search_history') || '[]');
@@ -540,205 +506,24 @@ function performSearch(queryText) {
     const query = queryText || searchInput.value.trim();
     if (query !== '') {
         saveSearchQuery(query);
-        currentSearchQuery = query;
 
+        // لو المستخدم كتب رابط حقيقي يفتحه مباشرة
         if (query.startsWith('http://') || query.startsWith('https://')) {
             window.open(query, '_blank');
             return;
         }
 
-        mainView.style.display = 'none';
-        resultsView.style.display = 'flex';
-        if (resultsSearchInput) resultsSearchInput.value = query;
-
-        renderSearchResults(query, currentSearchTab);
+        // التوجيه الفوري لصفحة نتائج بحث Google الرسمية
+        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        window.open(googleUrl, '_blank');
+        searchInput.value = '';
     }
-}
-
-function renderSearchResults(query, tab) {
-    if (!resultsContent) return;
-    resultsContent.innerHTML = `<div style="text-align: center; padding: 40px; color: #666;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #1a73e8;"></i><p style="margin-top: 10px;">جاري جلب نتائج Google لـ "${query}"...</p></div>`;
-
-    setTimeout(() => {
-        resultsContent.innerHTML = '';
-
-        if (tab === 'all') {
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-            
-            const mainCard = document.createElement('div');
-            mainCard.className = 'result-card';
-            mainCard.style.border = "2px solid #4285f4";
-            mainCard.innerHTML = `
-                <a href="${googleSearchUrl}" target="_blank"><i class="fa-brands fa-google" style="color: #4285f4; margin-left: 8px;"></i> عرض كافة نتائج Google لـ: ${query}</a>
-                <p>انقر هنا لفتح صفحة نتائج Google الرسمية مباشرة وتصفح جميع المواقع والمقالات المتعلقة ببحثك.</p>
-            `;
-            resultsContent.appendChild(mainCard);
-
-            for (let i = 1; i <= 15; i++) {
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.innerHTML = `
-                    <a href="${googleSearchUrl}" target="_blank">(${i}) نتيجة بحث Google عن: ${query} - مرجع رقم ${i}</a>
-                    <p>استكشف تفاصيل إضافية ومصادر موثوقة مرتبطة بـ "${query}" من خلال محرك بحث Google الأساسي.</p>
-                `;
-                resultsContent.appendChild(card);
-            }
-        } else if (tab === 'images') {
-            const googleImagesUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch`;
-            
-            const imgCard = document.createElement('div');
-            imgCard.className = 'result-card';
-            imgCard.style.textAlign = 'center';
-            imgCard.innerHTML = `
-                <a href="${googleImagesUrl}" target="_blank" style="font-size: 1.3rem; color: #ea4335;"><i class="fa-solid fa-image"></i> اضغط هنا لفتح صور Google الكاملة لـ "${query}"</a>
-            `;
-            resultsContent.appendChild(imgCard);
-
-            const grid = document.createElement('div');
-            grid.className = 'images-grid';
-
-            for (let i = 1; i <= 24; i++) {
-                const card = document.createElement('div');
-                card.className = 'image-card';
-                
-                const cleanQuery = encodeURIComponent(query);
-                const imgUrl = `https://picsum.photos/seed/${cleanQuery+i}/800/600`;
-                const thumbUrl = `https://picsum.photos/seed/${cleanQuery+i}/300/200`;
-
-                card.innerHTML = `
-                    <img src="${thumbUrl}" alt="${query}" style="cursor: pointer; background: #e0e0e0; object-fit: cover;" class="clickable-image" data-img="${imgUrl}" data-title="${query} - صورة Google (${i})">
-                    <p>صورة Google (${i})</p>
-                `;
-                grid.appendChild(card);
-            }
-            resultsContent.appendChild(grid);
-
-            document.querySelectorAll('.clickable-image').forEach(img => {
-                img.addEventListener('click', (e) => {
-                    const imgSrc = e.target.getAttribute('data-img');
-                    const imgTitle = e.target.getAttribute('data-title');
-                    openImageViewer(imgSrc, imgTitle);
-                });
-            });
-
-        } else if (tab === 'videos') {
-            const googleVideosUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=vid`;
-            
-            const vidCard = document.createElement('div');
-            vidCard.className = 'result-card';
-            vidCard.style.textAlign = 'center';
-            vidCard.innerHTML = `
-                <a href="${googleVideosUrl}" target="_blank" style="font-size: 1.3rem; color: #ea4335;"><i class="fa-solid fa-video"></i> اضغط هنا لعرض فيديوهات Google لـ "${query}"</a>
-            `;
-            resultsContent.appendChild(vidCard);
-
-            for (let i = 1; i <= 10; i++) {
-                const videoUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' video ' + i)}`;
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.innerHTML = `
-                    <a href="${videoUrl}" target="_blank"><i class="fa-brands fa-youtube" style="color: red; margin-left: 8px;"></i> فيديو مقترح (${i}) عبر Google/YouTube لـ: ${query}</a>
-                    <p>مقطع فيديو مرئي تم بحثه وتجهيزه عبر محركات البحث للوصول لأفضل الشروحات.</p>
-                `;
-                resultsContent.appendChild(card);
-            }
-        }
-    }, 150);
-}
-
-function openImageViewer(url, title) {
-    let viewerModal = document.getElementById('image-viewer-modal');
-    if (!viewerModal) {
-        viewerModal = document.createElement('div');
-        viewerModal.id = 'image-viewer-modal';
-        viewerModal.className = 'modal';
-        viewerModal.innerHTML = `
-            <div class="modal-content" style="text-align: center; max-width: 500px;">
-                <span class="close-btn" id="close-image-viewer">&times;</span>
-                <h3 id="viewer-title" style="margin-bottom: 15px; font-size: 1.1rem; color: #333;"></h3>
-                <img id="viewer-img" src="" alt="Zoomed Image" style="width: 100%; max-height: 320px; object-fit: contain; border-radius: 8px; margin-bottom: 20px;">
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button id="viewer-download-btn" class="submit-btn" style="background: #34a853; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <i class="fa-solid fa-download"></i> تنزيل الصورة
-                    </button>
-                    <button id="viewer-share-btn" class="submit-btn" style="background: #4285f4; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <i class="fa-solid fa-share-nodes"></i> مشاركة
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(viewerModal);
-
-        document.getElementById('close-image-viewer').addEventListener('click', () => {
-            viewerModal.style.display = 'none';
-        });
-    }
-
-    document.getElementById('viewer-title').innerText = title;
-    document.getElementById('viewer-img').src = url;
-    viewerModal.style.display = 'flex';
-
-    const dlBtn = document.getElementById('viewer-download-btn');
-    dlBtn.onclick = () => {
-        addDownloadItem(title, url);
-        alert("تمت إضافة الصورة إلى قائمة التنزيلات بنجاح!");
-        viewerModal.style.display = 'none';
-    };
-
-    const shareBtn = document.getElementById('viewer-share-btn');
-    shareBtn.onclick = () => {
-        if (navigator.share) {
-            navigator.share({ title: title, url: url }).catch(() => {});
-        } else {
-            navigator.clipboard.writeText(url);
-            alert("تم نسخ رابط الصورة!");
-        }
-    };
-}
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentSearchTab = btn.getAttribute('data-tab');
-        if (currentSearchQuery) {
-            renderSearchResults(currentSearchQuery, currentSearchTab);
-        }
-    });
-});
-
-if (backToHomeBtn) {
-    backToHomeBtn.addEventListener('click', () => {
-        resultsView.style.display = 'none';
-        mainView.style.display = 'flex';
-    });
-}
-if (resultsHomeLogo) {
-    resultsHomeLogo.addEventListener('click', () => {
-        resultsView.style.display = 'none';
-        mainView.style.display = 'flex';
-    });
 }
 
 if (searchBtn) searchBtn.addEventListener('click', () => performSearch());
 if (searchInput) {
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') performSearch();
-    });
-}
-
-if (resultsSearchBtn) {
-    resultsSearchBtn.addEventListener('click', () => {
-        const q = resultsSearchInput.value.trim();
-        if (q) performSearch(q);
-    });
-}
-if (resultsSearchInput) {
-    resultsSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const q = resultsSearchInput.value.trim();
-            if (q) performSearch(q);
-        }
     });
 }
 

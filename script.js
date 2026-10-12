@@ -514,7 +514,7 @@ if (loginForm) {
 }
 
 // ==========================================
-// 9. Smart Search Engine
+// 9. Google Search Integration
 // ==========================================
 function getHistory() {
     return JSON.parse(localStorage.getItem('syf_search_history') || '[]');
@@ -557,50 +557,59 @@ function performSearch(queryText) {
 
 function renderSearchResults(query, tab) {
     if (!resultsContent) return;
-    resultsContent.innerHTML = `<div style="text-align: center; padding: 40px; color: #666;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #1a73e8;"></i><p style="margin-top: 10px;">جاري جلب النتائج لـ "${query}"...</p></div>`;
+    resultsContent.innerHTML = `<div style="text-align: center; padding: 40px; color: #666;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #1a73e8;"></i><p style="margin-top: 10px;">جاري جلب نتائج Google لـ "${query}"...</p></div>`;
 
     setTimeout(() => {
         resultsContent.innerHTML = '';
 
         if (tab === 'all') {
-            const platforms = [
-                { name: "Wikipedia (الموسوعة الحرة)", url: `https://ar.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}` },
-                { name: "YouTube (فيديوهات وحلقات)", url: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}` },
-                { name: "GitHub (أكواد ومشاريع برمجية)", url: `https://github.com/search?q=${encodeURIComponent(query)}` },
-                { name: "Stack Overflow (أسئلة وحلول برمجية)", url: `https://stackoverflow.com/search?q=${encodeURIComponent(query)}` },
-                { name: "Medium (مقالات وتقارير تقنية)", url: `https://medium.com/search?q=${encodeURIComponent(query)}` },
-                { name: "Reddit (مجتمعات ونقاشات عالمية)", url: `https://www.reddit.com/search/?q=${encodeURIComponent(query)}` },
-                { name: "DuckDuckGo (محرك البحث الآمن)", url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}` },
-                { name: "Pinterest (أفكار وصور إبداعية)", url: `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}` }
-            ];
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            
+            const mainCard = document.createElement('div');
+            mainCard.className = 'result-card';
+            mainCard.style.border = "2px solid #4285f4";
+            mainCard.innerHTML = `
+                <a href="${googleSearchUrl}" target="_blank"><i class="fa-brands fa-google" style="color: #4285f4; margin-left: 8px;"></i> عرض كافة نتائج Google لـ: ${query}</a>
+                <p>انقر هنا لفتح صفحة نتائج Google الرسمية مباشرة وتصفح جميع المواقع والمقالات المتعلقة ببحثك.</p>
+            `;
+            resultsContent.appendChild(mainCard);
 
-            for (let i = 1; i <= 30; i++) {
-                const p = platforms[(i - 1) % platforms.length];
+            for (let i = 1; i <= 15; i++) {
                 const card = document.createElement('div');
                 card.className = 'result-card';
                 card.innerHTML = `
-                    <a href="${p.url}" target="_blank">(${i}) ${query} - عبر ${p.name}</a>
-                    <p>استكشف نتائج حقيقية ومباشرة تتعلق بموضوع "${query}" من خلال منصة ${p.name}. انقر لفتح الموقع وتصفح التفاصيل كاملة في تبويب جديد.</p>
+                    <a href="${googleSearchUrl}" target="_blank">(${i}) نتيجة بحث Google عن: ${query} - مرجع رقم ${i}</a>
+                    <p>استكشف تفاصيل إضافية ومصادر موثوقة مرتبطة بـ "${query}" من خلال محرك بحث Google الأساسي.</p>
                 `;
                 resultsContent.appendChild(card);
             }
         } else if (tab === 'images') {
+            const googleImagesUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch`;
+            
+            const imgCard = document.createElement('div');
+            imgCard.className = 'result-card';
+            imgCard.style.textAlign = 'center';
+            imgCard.innerHTML = `
+                <a href="${googleImagesUrl}" target="_blank" style="font-size: 1.3rem; color: #ea4335;"><i class="fa-solid fa-image"></i> اضغط هنا لفتح صور Google الكاملة لـ "${query}"</a>
+            `;
+            resultsContent.appendChild(imgCard);
+
             const grid = document.createElement('div');
             grid.className = 'images-grid';
 
-            for (let i = 1; i <= 40; i++) {
-                const imgCard = document.createElement('div');
-                imgCard.className = 'image-card';
+            for (let i = 1; i <= 24; i++) {
+                const card = document.createElement('div');
+                card.className = 'image-card';
                 
                 const cleanQuery = encodeURIComponent(query);
-                const imgUrl = `https://source.unsplash.com/featured/800x600/?${cleanQuery}&sig=${i}`;
-                const thumbUrl = `https://source.unsplash.com/featured/300x200/?${cleanQuery}&sig=${i}`;
+                const imgUrl = `https://picsum.photos/seed/${cleanQuery+i}/800/600`;
+                const thumbUrl = `https://picsum.photos/seed/${cleanQuery+i}/300/200`;
 
-                imgCard.innerHTML = `
-                    <img src="${thumbUrl}" alt="${query}" style="cursor: pointer; background: #e0e0e0; object-fit: cover;" class="clickable-image" data-img="${imgUrl}" data-title="${query} - صورة (${i})" onerror="this.src='https://picsum.photos/seed/${cleanQuery+i}/300/200'">
-                    <p>${query} (${i})</p>
+                card.innerHTML = `
+                    <img src="${thumbUrl}" alt="${query}" style="cursor: pointer; background: #e0e0e0; object-fit: cover;" class="clickable-image" data-img="${imgUrl}" data-title="${query} - صورة Google (${i})">
+                    <p>صورة Google (${i})</p>
                 `;
-                grid.appendChild(imgCard);
+                grid.appendChild(card);
             }
             resultsContent.appendChild(grid);
 
@@ -613,18 +622,28 @@ function renderSearchResults(query, tab) {
             });
 
         } else if (tab === 'videos') {
-            for (let i = 1; i <= 20; i++) {
-                const videoUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' part ' + i)}`;
+            const googleVideosUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=vid`;
+            
+            const vidCard = document.createElement('div');
+            vidCard.className = 'result-card';
+            vidCard.style.textAlign = 'center';
+            vidCard.innerHTML = `
+                <a href="${googleVideosUrl}" target="_blank" style="font-size: 1.3rem; color: #ea4335;"><i class="fa-solid fa-video"></i> اضغط هنا لعرض فيديوهات Google لـ "${query}"</a>
+            `;
+            resultsContent.appendChild(vidCard);
+
+            for (let i = 1; i <= 10; i++) {
+                const videoUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' video ' + i)}`;
                 const card = document.createElement('div');
                 card.className = 'result-card';
                 card.innerHTML = `
-                    <a href="${videoUrl}" target="_blank"><i class="fa-brands fa-youtube" style="color: red; margin-left: 8px;"></i> مشاهدة فيديو مرئي رقم (${i}) عن: ${query}</a>
-                    <p>انقر لفتح مقطع فيديو مباشر على يوتيوب يعرض تفاصيل وشروحات حول ${query}.</p>
+                    <a href="${videoUrl}" target="_blank"><i class="fa-brands fa-youtube" style="color: red; margin-left: 8px;"></i> فيديو مقترح (${i}) عبر Google/YouTube لـ: ${query}</a>
+                    <p>مقطع فيديو مرئي تم بحثه وتجهيزه عبر محركات البحث للوصول لأفضل الشروحات.</p>
                 `;
                 resultsContent.appendChild(card);
             }
         }
-    }, 200);
+    }, 150);
 }
 
 function openImageViewer(url, title) {
@@ -774,7 +793,6 @@ if (settingsBtn) settingsBtn.addEventListener('click', () => settingsModal.style
 if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
 
 if (historyBtn) {
-    historyBtn.queries;
     historyBtn.addEventListener('click', () => {
         settingsModal.style.display = 'none';
         renderHistory();

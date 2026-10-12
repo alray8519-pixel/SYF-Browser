@@ -21,8 +21,7 @@
             </div>
         </div>
 
-        <!-- تم تجمع الأدوات هنا ليتم إخفاؤها في صفحة النتائج وإرجاعها في الرئيسية -->
-        <div class="top-bar-end" id="top-tools-container">
+        <div class="top-bar-end">
             <button class="icon-btn" id="support-btn" title="الدعم الفني عبر واتساب">
                 <i class="fa-brands fa-whatsapp"></i>
             </button>
@@ -79,32 +78,21 @@
         </div>
     </div>
 
-    <!-- Browser Results View (صفحة النتائج الداخلية) -->
-    <div id="results-view" style="display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; flex-direction: column; background: #fff; z-index: 50;">
-        <div style="display: flex; align-items: center; padding: 10px 20px; background: #f1f3f4; border-bottom: 1px solid #dadce0; gap: 15px;">
-            <button id="back-to-home-btn" class="icon-btn" style="background: #fff; color: #333;" title="الرئيسية">
-                <i class="fa-solid fa-house"></i>
-            </button>
-            <span style="font-weight: bold; color: #4285f4; font-size: 1.2rem;">SYF Browser - Google Search</span>
-        </div>
-        <iframe id="google-results-iframe" src="" style="width: 100%; height: calc(100vh - 60px); border: none;"></iframe>
-    </div>
-
-    <!-- Image Search Modal (مصحح ليعمل بشكل سليم) -->
+    <!-- Image Search Modal -->
     <div class="modal" id="image-search-modal">
         <div class="modal-content" style="text-align: center;">
             <span class="close-btn" id="close-image-search-modal">&times;</span>
-            <h2>البحث باستخدام صورة</h2>
-            <p style="color: #666; font-size: 0.9rem; margin: 15px 0;">اختر صورة من جهازك للبحث عنها في Google.</p>
+            <h2 style="margin-bottom: 10px;">البحث باستخدام صورة</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">اختر صورة من هاتفك للبحث عنها.</p>
             <input type="file" id="image-search-file-input" accept="image/*" style="display: none;">
             <div id="image-preview-container" style="display: none; margin-bottom: 15px;">
-                <img id="image-search-preview" alt="معاينة الصورة" style="max-width: 100%; max-height: 150px; border-radius: 8px;">
+                <img id="image-search-preview" alt="معاينة" style="max-width: 100%; max-height: 150px; border-radius: 8px;">
             </div>
             <button id="select-image-btn" class="submit-btn" style="background: #f1f3f4; color: #333; margin-bottom: 10px;">
-                <i class="fa-solid fa-upload"></i> اختر صورة من الجهاز
+                <i class="fa-solid fa-upload"></i> اختيار صورة من الجهاز
             </button>
-            <button id="submit-image-search-btn" class="submit-btn" style="display: none; background: #1a73e8;">
-                <i class="fa-solid fa-magnifying-glass"></i> تنفيذ البحث بالصورة
+            <button id="submit-image-search-btn" class="submit-btn" style="display: none;">
+                <i class="fa-solid fa-magnifying-glass"></i> الانتقال للبحث بالصورة
             </button>
         </div>
     </div>

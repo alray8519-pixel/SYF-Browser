@@ -1,551 +1,209 @@
-// ==========================================
-// 1. Firebase Configuration & Initialization
-// ==========================================
-const firebaseConfig = {
-    apiKey: "AIzaSyAk6UmlYdek_I7Jq5ZdRNVPJoyMmUArQeY",
-    authDomain: "syf-browser.firebaseapp.com",
-    projectId: "syf-browser",
-    storageBucket: "syf-browser.firebasestorage.app",
-    messagingSenderId: "458736540441",
-    appId: "1:458736540441:web:2e7da0fbfec1e17f2b8388"
-};
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYF Browser</title>
+    <!-- App Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-const DEVELOPER_EMAIL = "admin@syfbrowser.com";
-
-// ==========================================
-// 2. DOM Elements Selection
-// ==========================================
-const mainView = document.getElementById('main-view');
-const resultsView = document.getElementById('results-view');
-const resultsContent = document.getElementById('results-content');
-const resultsSearchInput = document.getElementById('results-search-input');
-const resultsSearchBtn = document.getElementById('results-search-btn');
-const backToHomeBtn = document.getElementById('back-to-home-btn');
-const resultsHomeLogo = document.getElementById('results-home-logo');
-
-const loginModal = document.getElementById('login-modal');
-const loginForm = document.getElementById('login-form');
-const modalTitle = document.getElementById('modal-title');
-const nameGroup = document.getElementById('name-group');
-const usernameInput = document.getElementById('username-input');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const loginSubmitBtn = document.getElementById('login-submit-btn');
-const authToggleMsg = document.getElementById('auth-toggle-msg');
-
-const userAvatarBtn = document.getElementById('user-avatar-btn');
-const topUserAvatar = document.getElementById('top-user-avatar');
-const profileModal = document.getElementById('profile-modal');
-const closeProfileModal = document.getElementById('close-profile-modal');
-const cardUserAvatar = document.getElementById('card-user-avatar');
-const cardUserName = document.getElementById('card-user-name');
-const logoutBtn = document.getElementById('logout-btn');
-
-const settingsBtn = document.getElementById('settings-btn');
-const settingsModal = document.getElementById('settings-modal');
-const closeSettingsModal = document.getElementById('close-settings-modal');
-
-const bgBtn = document.getElementById('bg-btn');
-const bgFileInput = document.getElementById('bg-file-input');
-
-const historyBtn = document.getElementById('history-btn');
-const historyModal = document.getElementById('history-modal');
-const closeHistoryModal = document.getElementById('close-history-modal');
-const historyList = document.getElementById('history-list');
-const clearHistoryBtn = document.getElementById('clear-history-btn');
-
-const topDownloadsBtn = document.getElementById('top-downloads-btn');
-const downloadsBtn = document.getElementById('downloads-btn');
-const downloadsModal = document.getElementById('downloads-modal');
-const closeDownloadsModal = document.getElementById('close-downloads-modal');
-const downloadsList = document.getElementById('downloads-list');
-const clearDownloadsBtn = document.getElementById('clear-downloads-btn');
-
-const showDevBtn = document.getElementById('show-dev-btn');
-const devModal = document.getElementById('dev-modal');
-const closeDevModal = document.getElementById('close-dev-modal');
-
-const adminMonitorBtn = document.getElementById('admin-monitor-btn');
-const adminMonitorModal = document.getElementById('admin-monitor-modal');
-const closeAdminMonitorModal = document.getElementById('close-admin-monitor-modal');
-const adminSearchesList = document.getElementById('admin-searches-list');
-
-const langToggleBtn = document.getElementById('lang-toggle-btn');
-const langIndicator = document.getElementById('lang-indicator');
-
-const searchInput = document.getElementById('search-input');
-const searchBtn = document.getElementById('search-btn');
-
-const addShortcutBtn = document.getElementById('add-shortcut-btn');
-const shortcutModal = document.getElementById('shortcut-modal');
-const closeShortcutModal = document.getElementById('close-shortcut-modal');
-const shortcutForm = document.getElementById('shortcut-form');
-const shortcutTitle = document.getElementById('shortcut-title');
-const shortcutUrl = document.getElementById('shortcut-url');
-const shortcutsGrid = document.getElementById('shortcuts-grid');
-
-const supportBtn = document.getElementById('support-btn');
-const supportModal = document.getElementById('support-modal');
-const closeSupportModal = document.getElementById('close-support-modal');
-const supportForm = document.getElementById('support-form');
-const supportMessageInput = document.getElementById('support-message-input');
-const SUPPORT_WHATSAPP_NUMBER = "201227095092";
-
-const imageSearchBtn = document.getElementById('image-search-btn');
-const imageSearchModal = document.getElementById('image-search-modal');
-const closeImageSearchModal = document.getElementById('close-image-search-modal');
-const selectImageBtn = document.getElementById('select-image-btn');
-const imageSearchFileInput = document.getElementById('image-search-file-input');
-const imagePreviewContainer = document.getElementById('image-preview-container');
-const imageSearchPreview = document.getElementById('image-search-preview');
-const submitImageSearchBtn = document.getElementById('submit-image-search-btn');
-
-let isSignUpMode = true;
-let currentLang = localStorage.getItem('syf_lang') || 'ar';
-let currentUserData = null;
-let currentSearchTab = 'all';
-let currentSearchQuery = '';
-
-// Background Setup
-const savedBg = localStorage.getItem('syf_custom_bg');
-if (savedBg) {
-    document.body.style.backgroundImage = `url('${savedBg}')`;
-}
-
-if (bgBtn && bgFileInput) {
-    bgBtn.addEventListener('click', () => bgFileInput.click());
-    bgFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const bgUrl = evt.target.result;
-                document.body.style.backgroundImage = `url('${bgUrl}')`;
-                localStorage.setItem('syf_custom_bg', bgUrl);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-}
-
-function getCustomShortcuts() {
-    return JSON.parse(localStorage.getItem('syf_custom_shortcuts') || '[]');
-}
-
-function renderShortcuts() {
-    const customList = getCustomShortcuts();
-    document.querySelectorAll('.custom-shortcut-item').forEach(el => el.remove());
-
-    customList.forEach(item => {
-        const a = document.createElement('a');
-        a.href = item.url;
-        a.target = '_blank';
-        a.className = 'shortcut-item custom-shortcut-item';
-        a.innerHTML = `
-            <div class="shortcut-icon"><i class="fa-solid fa-globe"></i></div>
-            <span class="shortcut-label">${item.title}</span>
-        `;
-        shortcutsGrid.insertBefore(a, addShortcutBtn);
-    });
-}
-
-renderShortcuts();
-
-if (addShortcutBtn) addShortcutBtn.addEventListener('click', () => shortcutModal.style.display = 'flex');
-if (closeShortcutModal) closeShortcutModal.addEventListener('click', () => shortcutModal.style.display = 'none');
-
-if (shortcutForm) {
-    shortcutForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const title = shortcutTitle.value.trim();
-        let url = shortcutUrl.value.trim();
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            url = 'https://' + url;
-        }
-
-        const shortcuts = getCustomShortcuts();
-        shortcuts.push({ title, url });
-        localStorage.setItem('syf_custom_shortcuts', JSON.stringify(shortcuts));
-        renderShortcuts();
-
-        shortcutModal.style.display = 'none';
-        shortcutForm.reset();
-    });
-}
-
-// Support System (WhatsApp)
-if (supportBtn) {
-    supportBtn.addEventListener('click', () => supportModal.style.display = 'flex');
-}
-if (closeSupportModal) closeSupportModal.addEventListener('click', () => supportModal.style.display = 'none');
-
-if (supportForm) {
-    supportForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const messageText = supportMessageInput ? supportMessageInput.value.trim() : '';
-        let fullMessage = "مرحباً، أحتاج إلى مساعدة في متصفح SYF Browser.";
-        if (currentUserData && currentUserData.displayName) {
-            fullMessage += `\nالاسم: ${currentUserData.displayName}`;
-        }
-        if (messageText !== '') {
-            fullMessage += `\nالرسالة: ${messageText}`;
-        }
-        const whatsappUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(fullMessage)}`;
-        window.open(whatsappUrl, '_blank');
-        supportModal.style.display = 'none';
-        supportForm.reset();
-    });
-}
-
-// Image Search
-function openImageSearchModal() {
-    imageSearchModal.style.display = 'flex';
-}
-
-if (imageSearchBtn) imageSearchBtn.addEventListener('click', openImageSearchModal);
-if (closeImageSearchModal) closeImageSearchModal.addEventListener('click', () => imageSearchModal.style.display = 'none');
-
-if (selectImageBtn && imageSearchFileInput) {
-    selectImageBtn.addEventListener('click', () => imageSearchFileInput.click());
-    imageSearchFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                imageSearchPreview.src = evt.target.result;
-                imagePreviewContainer.style.display = 'block';
-                submitImageSearchBtn.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-}
-
-if (submitImageSearchBtn) {
-    submitImageSearchBtn.addEventListener('click', () => {
-        imageSearchModal.style.display = 'none';
-        const query = "صورة بحث";
-        performSearch(query);
-        imagePreviewContainer.style.display = 'none';
-        submitImageSearchBtn.style.display = 'none';
-        imageSearchFileInput.value = '';
-    });
-}
-
-// Downloads System
-function getDownloads() {
-    return JSON.parse(localStorage.getItem('syf_downloads') || '[]');
-}
-
-function renderDownloads() {
-    if (!downloadsList) return;
-    const downloads = getDownloads();
-    downloadsList.innerHTML = '';
-    if (downloads.length === 0) {
-        downloadsList.innerHTML = `<li style="text-align: center; color: #888; padding: 20px;">لا توجد أي تنزيلات حالياً.</li>`;
-        return;
-    }
-    downloads.forEach((item) => {
-        const li = document.createElement('li');
-        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee;";
-        li.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-file-image" style="color: #1a73e8; font-size: 1.2rem;"></i>
-                <div>
-                    <strong style="display: block; font-size: 0.95rem; color: #333;">${item.name}</strong>
-                    <small style="color: #888; font-size: 0.75rem;">${item.size} - ${item.date}</small>
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+        <div class="top-bar-start">
+            <div id="user-badge-container">
+                <div id="user-avatar-btn" class="user-avatar-wrapper" style="display: none;">
+                    <img id="top-user-avatar" src="" alt="User Avatar">
                 </div>
             </div>
-            <a href="${item.url}" download target="_blank" style="color: #34a853; text-decoration: none; font-weight: bold; font-size: 0.85rem;"><i class="fa-solid fa-download"></i> فتح</a>
-        `;
-        downloadsList.appendChild(li);
-    });
-}
+        </div>
 
-if (topDownloadsBtn) {
-    topDownloadsBtn.addEventListener('click', () => {
-        renderDownloads();
-        downloadsModal.style.display = 'flex';
-    });
-}
+        <div class="top-bar-end">
+            <!-- زر الدعم الفني عبر واتساب -->
+            <button class="icon-btn" id="support-btn" title="الدعم الفني عبر واتساب">
+                <i class="fa-brands fa-whatsapp"></i>
+            </button>
 
-if (downloadsBtn) {
-    downloadsBtn.addEventListener('click', () => {
-        settingsModal.style.display = 'none';
-        renderDownloads();
-        downloadsModal.style.display = 'flex';
-    });
-}
+            <!-- زر التنزيلات -->
+            <button class="icon-btn" id="top-downloads-btn" title="التنزيلات">
+                <i class="fa-solid fa-download"></i>
+            </button>
 
-if (closeDownloadsModal) closeDownloadsModal.addEventListener('click', () => downloadsModal.style.display = 'none');
+            <button class="icon-btn" id="bg-btn" title="تغيير الخلفية">
+                <i class="fa-solid fa-image"></i>
+            </button>
+            <button class="icon-btn" id="settings-btn" title="الإعدادات">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+            <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
+        </div>
+    </div>
 
-if (clearDownloadsBtn) {
-    clearDownloadsBtn.addEventListener('click', () => {
-        localStorage.removeItem('syf_downloads');
-        renderDownloads();
-    });
-}
+    <!-- Main Home View -->
+    <div id="main-view">
+        <div class="logo" id="home-logo">
+            <span class="char-s">S</span><span class="char-y">Y</span><span class="char-f">F</span>
+        </div>
 
-// Auth Observer
-auth.onAuthStateChanged((user) => {
-    currentUserData = user;
-    if (user) {
-        loginModal.style.display = 'none';
-        userAvatarBtn.style.display = 'block';
-        const defaultAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName || user.email) + "&background=1a73e8&color=fff";
-        const photoURL = user.photoURL || defaultAvatar;
-        topUserAvatar.src = photoURL;
-        cardUserAvatar.src = photoURL;
-        cardUserName.innerText = user.displayName || user.email;
+        <!-- Search Box -->
+        <div class="search-box">
+            <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً...">
+            <div class="search-actions">
+                <i class="fa-solid fa-camera action-btn" id="image-search-btn" title="البحث باستخدام صورة"></i>
+                <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
+            </div>
+        </div>
 
-        if (user.email && user.email.toLowerCase() === DEVELOPER_EMAIL.toLowerCase()) {
-            if (adminMonitorBtn) adminMonitorBtn.style.display = "flex";
-        } else {
-            if (adminMonitorBtn) adminMonitorBtn.style.display = "none";
-        }
-    } else {
-        loginModal.style.display = 'flex';
-        userAvatarBtn.style.display = 'none';
-        if (adminMonitorBtn) adminMonitorBtn.style.display = "none";
-    }
-});
+        <!-- Shortcuts -->
+        <div class="shortcuts-container" id="shortcuts-grid">
+            <a href="https://www.youtube.com" class="shortcut-item youtube">
+                <div class="shortcut-icon"><i class="fa-brands fa-youtube"></i></div>
+                <span class="shortcut-label">يوتيوب</span>
+            </a>
+            <a href="https://www.instagram.com" class="shortcut-item instagram">
+                <div class="shortcut-icon"><i class="fa-brands fa-instagram"></i></div>
+                <span class="shortcut-label">إنستغرام</span>
+            </a>
+            <a href="https://www.facebook.com" class="shortcut-item facebook">
+                <div class="shortcut-icon"><i class="fa-brands fa-facebook-f"></i></div>
+                <span class="shortcut-label">فيسبوك</span>
+            </a>
+            <a href="https://www.netflix.com" class="shortcut-item netflix">
+                <div class="shortcut-icon"><i class="fa-solid fa-film"></i></div>
+                <span class="shortcut-label">نتفليكس</span>
+            </a>
+            <div class="shortcut-item add-shortcut" id="add-shortcut-btn">
+                <div class="shortcut-icon add-icon"><i class="fa-solid fa-plus"></i></div>
+                <span class="shortcut-label">إضافة موقع</span>
+            </div>
+        </div>
+    </div>
 
-// Language System
-const translations = {
-    ar: { searchPlaceholder: "ابحث في SYF أو أدخل رابطاً...", addShortcut: "إضافة موقع", loginTitle: "إنشاء حساب جديد", loginTitleAlt: "تسجيل الدخول", usernameLabel: "الاسم الثلاثي", namePlaceholder: "أدخل اسمك الثلاثي هنا...", submitSignUp: "إنشاء حساب", submitLogin: "دخول", toggleToLogin: "لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول", toggleToSignUp: "ليس لديك حساب؟ اضغط هنا لإنشاء حساب جديد", settingsTitle: "الإعدادات", historyTitle: "سجل البحث", changeLangText: "تغيير اللغة", devPageBtn: "المطور", clearHistory: "مسح السجل" },
-    en: { searchPlaceholder: "Search SYF or enter URL...", addShortcut: "Add Shortcut", loginTitle: "Create New Account", loginTitleAlt: "Login", usernameLabel: "Full Name", namePlaceholder: "Enter your full name...", submitSignUp: "Sign Up", submitLogin: "Sign In", toggleToLogin: "Already have an account? Click to Login", toggleToSignUp: "Don't have an account? Click to Sign Up", settingsTitle: "Settings", historyTitle: "Search History", changeLangText: "Change Language", devPageBtn: "The Developer", clearHistory: "Clear History" }
-};
+    <!-- Browser Results View (يعرض جوجل بالكامل داخل متصفحك) -->
+    <div id="results-view" style="display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; flex-direction: column; background: #fff; z-index: 50;">
+        <div style="display: flex; align-items: center; padding: 10px 20px; background: #f1f3f4; border-bottom: 1px solid #dadce0; gap: 15px;">
+            <button id="back-to-home-btn" class="icon-btn" style="background: #fff; color: #333;" title="الرئيسية">
+                <i class="fa-solid fa-house"></i>
+            </button>
+            <span style="font-weight: bold; color: #4285f4; font-size: 1.2rem;">SYF Browser - Google Search</span>
+        </div>
+        <!-- iframe يعرض نتائج جوجل الرسمية الحقيقية داخل موقعك -->
+        <iframe id="google-results-iframe" src="" style="width: 100%; height: calc(100vh - 60px); border: none;"></iframe>
+    </div>
 
-function applyLanguage(lang) {
-    currentLang = lang;
-    localStorage.setItem('syf_lang', lang);
-    const htmlRoot = document.getElementById('html-root');
-    if (htmlRoot) {
-        htmlRoot.setAttribute('lang', lang);
-        htmlRoot.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-    }
-    if (langIndicator) langIndicator.innerText = lang === 'ar' ? 'EN' : 'AR';
-}
+    <!-- Image Search Modal -->
+    <div class="modal" id="image-search-modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" id="close-image-search-modal">&times;</span>
+            <h2>البحث باستخدام صورة</h2>
+            <p style="color: #666; font-size: 0.9rem; margin: 15px 0;">اختر صورة للبحث عنها في Google.</p>
+            <input type="file" id="image-search-file-input" accept="image/*" style="display: none;">
+            <button id="select-image-btn" class="submit-btn" style="background: #f1f3f4; color: #333; margin-bottom: 10px;">اختر صورة</button>
+        </div>
+    </div>
 
-if (langToggleBtn) {
-    langToggleBtn.addEventListener('click', () => {
-        applyLanguage(currentLang === 'ar' ? 'en' : 'ar');
-    });
-}
-applyLanguage(currentLang);
+    <!-- Downloads Modal -->
+    <div class="modal" id="downloads-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-downloads-modal">&times;</span>
+            <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>التنزيلات</h2>
+                <button class="clear-btn" id="clear-downloads-btn" style="background: #ea4335; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">مسح السجل</button>
+            </div>
+            <ul id="downloads-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;"></ul>
+        </div>
+    </div>
 
-// Login Form Toggle & Submit
-if (authToggleMsg) {
-    authToggleMsg.addEventListener('click', () => {
-        isSignUpMode = !isSignUpMode;
-        if (isSignUpMode) {
-            modalTitle.innerText = "إنشاء حساب جديد";
-            nameGroup.style.display = "flex";
-            loginSubmitBtn.innerText = "إنشاء حساب";
-            authToggleMsg.innerText = "لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول";
-            usernameInput.required = true;
-        } else {
-            modalTitle.innerText = "تسجيل الدخول";
-            nameGroup.style.display = "none";
-            loginSubmitBtn.innerText = "دخول";
-            authToggleMsg.innerText = "ليس لديك حساب؟ اضغط هنا لإنشاء حساب جديد";
-            usernameInput.required = false;
-        }
-    });
-}
+    <!-- Add Shortcut Modal -->
+    <div class="modal" id="shortcut-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-shortcut-modal">&times;</span>
+            <h2 style="margin-bottom: 20px; text-align: center;">إضافة اختصار جديد</h2>
+            <form id="shortcut-form">
+                <div class="form-group"><label>اسم الموقع</label><input type="text" id="shortcut-title" required placeholder="مثال: جوجل"></div>
+                <div class="form-group"><label>رابط الموقع (URL)</label><input type="url" id="shortcut-url" required placeholder="https://example.com"></div>
+                <button type="submit" class="submit-btn">حفظ الاختصار</button>
+            </form>
+        </div>
+    </div>
 
-if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        const name = usernameInput.value.trim();
+    <!-- Support Modal (WhatsApp) -->
+    <div class="modal" id="support-modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" id="close-support-modal">&times;</span>
+            <div style="font-size: 3rem; color: #25d366; margin-bottom: 10px;"><i class="fa-brands fa-whatsapp"></i></div>
+            <h2 style="margin-bottom: 10px;">الدعم الفني عبر واتساب</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">الرد خلال 24 ساعة.</p>
+            <form id="support-form">
+                <div class="form-group" style="text-align: right;"><textarea id="support-message-input" placeholder="اكتب استفسارك هنا..." style="width: 100%; height: 110px; padding: 12px; border-radius: 12px; border: 1px solid #dadce0; resize: none;"></textarea></div>
+                <button type="submit" class="submit-btn" style="background-color: #25d366;"><i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب</button>
+            </form>
+        </div>
+    </div>
 
-        if (isSignUpMode) {
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => userCredential.user.updateProfile({ displayName: name }))
-                .then(() => { loginModal.style.display = 'none'; loginForm.reset(); })
-                .catch((error) => alert("خطأ: " + error.message));
-        } else {
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => { loginModal.style.display = 'none'; loginForm.reset(); })
-                .catch((error) => alert("خطأ: " + error.message));
-        }
-    });
-}
+    <!-- Login Modal -->
+    <div class="modal force-modal" id="login-modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 id="modal-title" style="margin-bottom: 20px; text-align: center;">إنشاء حساب جديد</h2>
+            <form id="login-form">
+                <div class="form-group" id="name-group"><label>الاسم الثلاثي</label><input type="text" id="username-input" autocomplete="name" placeholder="أدخل اسمك الثلاثي..."></div>
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email-input" required autocomplete="username" placeholder="name@example.com"></div>
+                <div class="form-group"><label>كلمة السر</label><input type="password" id="password-input" required autocomplete="current-password" placeholder="••••••••"></div>
+                <button type="submit" class="submit-btn" id="login-submit-btn" style="margin-top: 15px;">إنشاء حساب</button>
+                <p id="auth-toggle-msg" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem; font-weight: bold;">لديك حساب بالفعل؟ تسجیل الدخول</p>
+            </form>
+        </div>
+    </div>
 
-// ==========================================
-// 9. Internal Search Display (تعرض النتائج داخل المتصفح)
-// ==========================================
-function performSearch(queryText) {
-    const query = queryText || searchInput.value.trim();
-    if (query !== '') {
-        currentSearchQuery = query;
+    <!-- Profile Modal -->
+    <div class="modal" id="profile-modal">
+        <div class="modal-content profile-card" style="text-align: center;">
+            <span class="close-btn" id="close-profile-modal">&times;</span>
+            <img id="card-user-avatar" src="" alt="Avatar" class="large-avatar" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px;">
+            <h3 id="card-user-name" style="margin-bottom: 15px;"></h3>
+            <button id="logout-btn" class="logout-action-btn" style="background: #ea4335; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer;">تسجيل الخروج</button>
+        </div>
+    </div>
 
-        if (query.startsWith('http://') || query.startsWith('https://')) {
-            window.open(query, '_blank');
-            return;
-        }
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-settings-modal">&times;</span>
+            <h2 style="margin-bottom: 20px;">الإعدادات</h2>
+            <div class="settings-options" style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="settings-option-btn" id="downloads-btn" style="padding: 12px; cursor: pointer;">التنزيلات</button>
+                <button class="settings-option-btn" id="lang-toggle-btn" style="padding: 12px; cursor: pointer;">تغيير اللغة (<span id="lang-indicator">EN</span>)</button>
+                <button class="settings-option-btn" id="show-dev-btn" style="padding: 12px; cursor: pointer;">المطور</button>
+                <button class="settings-option-btn" id="admin-monitor-btn" style="display: none; padding: 12px; background: #e8f0fe; color: #1a73e8; cursor: pointer;">مراقبة عمليات البحث</button>
+            </div>
+        </div>
+    </div>
 
-        // إخفاء الرئيسية وإظهار نافذة النتائج الداخلية دون الخروج للمتصفح الخارجي
-        mainView.style.display = 'none';
-        resultsView.style.display = 'flex';
-        if (resultsSearchInput) resultsSearchInput.value = query;
+    <!-- Admin Monitor Modal -->
+    <div class="modal" id="admin-monitor-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-btn" id="close-admin-monitor-modal">&times;</span>
+            <h2 style="margin-bottom: 15px; color: #1a73e8;">مراقبة عمليات البحث</h2>
+            <ul id="admin-searches-list" style="list-style: none; padding: 0; max-height: 350px; overflow-y: auto;"></ul>
+        </div>
+    </div>
 
-        renderSearchResults(query, currentSearchTab);
-    }
-}
+    <!-- Developer Modal -->
+    <div class="modal" id="dev-modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" id="close-dev-modal">&times;</span>
+            <h2>المطور</h2>
+            <p style="margin: 15px 0;">يوسف أبو الحجاج صالح - مصر - قنا</p>
+            <a href="https://www.youtube.com/@YYT_1" target="_blank" style="color: #ff0000; font-weight: bold;">زيارة القناة (@YYT_1)</a>
+        </div>
+    </div>
 
-function renderSearchResults(query, tab) {
-    if (!resultsContent) return;
-    resultsContent.innerHTML = `<div style="text-align: center; padding: 40px; color: #666;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #1a73e8;"></i><p style="margin-top: 10px;">جاري جلب نتائج البحث لـ "${query}"...</p></div>`;
-
-    setTimeout(() => {
-        resultsContent.innerHTML = '';
-        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-
-        if (tab === 'all') {
-            const mainCard = document.createElement('div');
-            mainCard.className = 'result-card';
-            mainCard.style.border = "2px solid #4285f4";
-            mainCard.innerHTML = `
-                <a href="${googleSearchUrl}" target="_blank"><i class="fa-brands fa-google" style="color: #4285f4; margin-left: 8px;"></i> عرض نتائج Google الكاملة لـ: ${query}</a>
-                <p>انقر هنا لفتح نتائج Google الرسمية مباشرة وتصفح كافة المواقع والمقالات المتعلقة ببحثك.</p>
-            `;
-            resultsContent.appendChild(mainCard);
-
-            for (let i = 1; i <= 10; i++) {
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.innerHTML = `
-                    <a href="${googleSearchUrl}" target="_blank">رابط بحث رقم (${i}) عن: ${query}</a>
-                    <p>نتيجة بحث مطابقة وموثوقة من مصادر الإنترنت المرتبطة بـ "${query}".</p>
-                `;
-                resultsContent.appendChild(card);
-            }
-        } else if (tab === 'images') {
-            const grid = document.createElement('div');
-            grid.className = 'images-grid';
-            for (let i = 1; i <= 20; i++) {
-                const card = document.createElement('div');
-                card.className = 'image-card';
-                const cleanQuery = encodeURIComponent(query);
-                const imgUrl = `https://picsum.photos/seed/${cleanQuery+i}/800/600`;
-                card.innerHTML = `
-                    <img src="${imgUrl}" alt="${query}" style="cursor: pointer; height: 140px; width: 100%; object-fit: cover;">
-                    <p>صورة بحث (${i})</p>
-                `;
-                grid.appendChild(card);
-            }
-            resultsContent.appendChild(grid);
-        } else if (tab === 'videos') {
-            for (let i = 1; i <= 10; i++) {
-                const videoUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' part ' + i)}`;
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.innerHTML = `
-                    <a href="${videoUrl}" target="_blank"><i class="fa-brands fa-youtube" style="color: red; margin-left: 8px;"></i> فيديو مقترح (${i}) عن: ${query}</a>
-                    <p>شرح مرئي وفيديو مباشر مرتبط بموضوع البحث.</p>
-                `;
-                resultsContent.appendChild(card);
-            }
-        }
-    }, 200);
-}
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentSearchTab = btn.getAttribute('data-tab');
-        if (currentSearchQuery) {
-            renderSearchResults(currentSearchQuery, currentSearchTab);
-        }
-    });
-});
-
-if (backToHomeBtn) {
-    backToHomeBtn.addEventListener('click', () => {
-        resultsView.style.display = 'none';
-        mainView.style.display = 'flex';
-    });
-}
-if (resultsHomeLogo) {
-    resultsHomeLogo.addEventListener('click', () => {
-        resultsView.style.display = 'none';
-        mainView.style.display = 'flex';
-    });
-}
-
-if (searchBtn) searchBtn.addEventListener('click', () => performSearch());
-if (searchInput) {
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
-    });
-}
-
-if (resultsSearchBtn) {
-    resultsSearchBtn.addEventListener('click', () => {
-        const q = resultsSearchInput.value.trim();
-        if (q) performSearch(q);
-    });
-}
-if (resultsSearchInput) {
-    resultsSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const q = resultsSearchInput.value.trim();
-            if (q) performSearch(q);
-        }
-    });
-}
-
-// Admin Monitor & Modals
-function loadAdminMonitorData() {
-    if (!adminSearchesList) return;
-    adminSearchesList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">جاري جلب البيانات...</li>`;
-    db.collection("user_searches").orderBy("timestamp", "desc").limit(50).get().then((snapshot) => {
-        adminSearchesList.innerHTML = '';
-        if (snapshot.empty) {
-            adminSearchesList.innerHTML = `<li style="text-align: center; color: #888; padding: 15px;">لا توجد عمليات بحث مسجلة.</li>`;
-            return;
-        }
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const timeStr = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'الآن';
-            const li = document.createElement('li');
-            li.style.cssText = "padding: 10px 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;";
-            li.innerHTML = `
-                <div>
-                    <strong style="color: #1a73e8; display: block; font-size: 0.9rem;">${data.userName} (${data.userEmail})</strong>
-                    <span style="color: #333; font-size: 1rem;">بحث عن: <strong>${data.query}</strong></span>
-                </div>
-                <small style="color: #888; font-size: 0.75rem;">${timeStr}</small>
-            `;
-            adminSearchesList.appendChild(li);
-        });
-    });
-}
-
-if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
-if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
-if (logoutBtn) logoutBtn.addEventListener('click', () => auth.signOut().then(() => profileModal.style.display = 'none'));
-if (settingsBtn) settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
-if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
-if (historyBtn) historyBtn.addEventListener('click', () => { settingsModal.style.display = 'none'; historyModal.style.display = 'flex'; });
-if (closeHistoryModal) closeHistoryModal.addEventListener('click', () => historyModal.style.display = 'none');
-if (showDevBtn) showDevBtn.addEventListener('click', () => { settingsModal.style.display = 'none'; devModal.style.display = 'flex'; });
-if (closeDevModal) closeDevModal.addEventListener('click', () => devModal.style.display = 'none');
-if (adminMonitorBtn) adminMonitorBtn.addEventListener('click', () => { settingsModal.style.display = 'none'; loadAdminMonitorData(); adminMonitorModal.style.display = 'flex'; });
-if (closeAdminMonitorModal) closeAdminMonitorModal.addEventListener('click', () => adminMonitorModal.style.display = 'none');
-
-window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal') && !e.target.classList.contains('force-modal')) {
-        e.target.style.display = 'none';
-    }
-});
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

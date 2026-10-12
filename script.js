@@ -1,3 +1,6 @@
+// ==========================================
+// 1. Firebase Configuration & Initialization
+// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyAk6UmlYdek_I7Jq5ZdRNVPJoyMmUArQeY",
     authDomain: "syf-browser.firebaseapp.com",
@@ -149,11 +152,51 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
+// إدارة زر التبديل بين تسجيل الدخول وإنشاء حساب (تمت إضافتها وتصحيحها هنا)
+if (authToggleMsg) {
+    authToggleMsg.addEventListener('click', () => {
+        isSignUpMode = !isSignUpMode;
+        if (isSignUpMode) {
+            modalTitle.innerText = "إنشاء حساب جديد";
+            nameGroup.style.display = "flex";
+            loginSubmitBtn.innerText = "إنشاء حساب";
+            authToggleMsg.innerText = "لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول";
+            usernameInput.required = true;
+        } else {
+            modalTitle.innerText = "تسجيل الدخول";
+            nameGroup.style.display = "none";
+            loginSubmitBtn.innerText = "دخول";
+            authToggleMsg.innerText = "ليس لديك حساب؟ اضغط هنا لإنشاء حساب جديد";
+            usernameInput.required = false;
+        }
+    });
+}
+
+// تنفيذ عملية تسجيل الدخول أو إنشاء الحساب
+if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const name = usernameInput.value.trim();
+
+        if (isSignUpMode) {
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => userCredential.user.updateProfile({ displayName: name }))
+                .then(() => { loginModal.style.display = 'none'; loginForm.reset(); })
+                .catch((error) => alert("خطأ: " + error.message));
+        } else {
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => { loginModal.style.display = 'none'; loginForm.reset(); })
+                .catch((error) => alert("خطأ: " + error.message));
+        }
+    });
+}
+
 // إدارة البحث وعرض جوجل داخل المتصفح (iframe)
 function performSearch(queryText) {
     const query = queryText || searchInput.value.trim();
     if (query !== '') {
-        // حفظ في الـ Firebase للآدمن
         if (currentUserData) {
             db.collection("user_searches").add({
                 userEmail: currentUserData.email,
@@ -168,11 +211,8 @@ function performSearch(queryText) {
             return;
         }
 
-        // إخفاء الرئيسية وعرض جوجل الحقيقي داخل الشاشة الخاصة بك
         mainView.style.display = 'none';
         resultsView.style.display = 'flex';
-        
-        // استخدام رابط بديل آمن لعرض نتائج البحث داخل الـ iframe
         googleResultsIframe.src = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
         searchInput.value = '';
     }

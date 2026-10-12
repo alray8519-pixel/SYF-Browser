@@ -22,10 +22,16 @@
         </div>
 
         <div class="top-bar-end">
-            <!-- زر الدعم الفني -->
+            <!-- زر الدعم الفني عبر واتساب -->
             <button class="icon-btn" id="support-btn" title="الدعم الفني عبر واتساب">
                 <i class="fa-brands fa-whatsapp"></i>
             </button>
+
+            <!-- زر التنزيلات -->
+            <button class="icon-btn" id="top-downloads-btn" title="التنزيلات">
+                <i class="fa-solid fa-download"></i>
+            </button>
+
             <button class="icon-btn" id="bg-btn" title="تغيير الخلفية">
                 <i class="fa-solid fa-image"></i>
             </button>
@@ -46,6 +52,8 @@
         <div class="search-box">
             <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً..." data-i18n-placeholder="searchPlaceholder">
             <div class="search-actions">
+                <!-- زر البحث باستخدام صورة -->
+                <i class="fa-solid fa-camera action-btn" id="image-search-btn" title="البحث باستخدام صورة من الهاتف"></i>
                 <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
             </div>
         </div>
@@ -75,6 +83,75 @@
         </div>
     </div>
 
+    <!-- Internal Search Results View -->
+    <div id="results-view" style="display: none;">
+        <div class="results-header">
+            <div class="results-top">
+                <div class="logo results-logo" id="results-home-logo">
+                    <span class="char-s">S</span><span class="char-y">Y</span><span class="char-f">F</span>
+                </div>
+                <div class="search-box results-search-box">
+                    <input type="text" class="search-input" id="results-search-input" placeholder="ابحث في SYF...">
+                    <div class="search-actions">
+                        <i class="fa-solid fa-camera action-btn" id="results-image-search-btn" title="البحث باستخدام صورة"></i>
+                        <i class="fa-solid fa-magnifying-glass action-btn" id="results-search-btn" title="بحث"></i>
+                    </div>
+                </div>
+                <button class="icon-btn back-btn" id="back-to-home-btn" title="الرئيسية">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </div>
+            <!-- Tabs (الكل - صور - فيديوهات) -->
+            <div class="results-tabs">
+                <button class="tab-btn active" data-tab="all"><i class="fa-solid fa-magnifying-glass"></i> الكل</button>
+                <button class="tab-btn" data-tab="images"><i class="fa-solid fa-image"></i> صور</button>
+                <button class="tab-btn" data-tab="videos"><i class="fa-solid fa-video"></i> فيديوهات</button>
+            </div>
+        </div>
+
+        <div class="results-content" id="results-content">
+            <!-- النتائج تعرض هنا -->
+        </div>
+    </div>
+
+    <!-- Image Search Modal -->
+    <div class="modal" id="image-search-modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" id="close-image-search-modal">&times;</span>
+            <div style="font-size: 2.5rem; color: #1a73e8; margin-bottom: 10px;">
+                <i class="fa-solid fa-camera"></i>
+            </div>
+            <h2 style="margin-bottom: 10px;">البحث باستخدام صورة</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">
+                اختر صورة من هاتفك للبحث عن المحتوى والنتائج المتعلقة بها.
+            </p>
+            <input type="file" id="image-search-file-input" accept="image/*" style="display: none;">
+            <div id="image-preview-container" style="display: none; margin-bottom: 15px;">
+                <img id="image-search-preview" src="" alt="صورة المعاينة" style="max-width: 100%; max-height: 180px; border-radius: 10px; border: 1px solid #ddd;">
+            </div>
+            <button id="select-image-btn" class="submit-btn" style="background: #f1f3f4; color: #333; margin-bottom: 10px;">
+                <i class="fa-solid fa-upload"></i> اختيار صورة من الهاتف
+            </button>
+            <button id="submit-image-search-btn" class="submit-btn" style="display: none;">
+                <i class="fa-solid fa-magnifying-glass"></i> إرسال للبحث
+            </button>
+        </div>
+    </div>
+
+    <!-- Downloads Modal -->
+    <div class="modal" id="downloads-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-downloads-modal">&times;</span>
+            <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2><i class="fa-solid fa-download" style="color: #1a73e8; margin-left: 8px;"></i> التنزيلات</h2>
+                <button class="clear-btn" id="clear-downloads-btn" style="background: #ea4335; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">مسح السجل</button>
+            </div>
+            <ul id="downloads-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;">
+                <!-- عناصر التنزيل تحمل هنا -->
+            </ul>
+        </div>
+    </div>
+
     <!-- Add Shortcut Modal -->
     <div class="modal" id="shortcut-modal">
         <div class="modal-content">
@@ -94,7 +171,7 @@
         </div>
     </div>
 
-    <!-- Support Modal (WhatsApp Support) -->
+    <!-- Support Modal (WhatsApp) -->
     <div class="modal" id="support-modal">
         <div class="modal-content" style="text-align: center;">
             <span class="close-btn" id="close-support-modal">&times;</span>
@@ -172,6 +249,11 @@
                     <i class="fa-solid fa-clock-rotate-left"></i>
                     <span data-i18n="historyTitle">سجل البحث</span>
                 </button>
+
+                <button class="settings-option-btn" id="downloads-btn">
+                    <i class="fa-solid fa-download"></i>
+                    <span>التنزيلات</span>
+                </button>
                 
                 <button class="settings-option-btn" id="lang-toggle-btn">
                     <i class="fa-solid fa-globe"></i>
@@ -183,7 +265,7 @@
                     <span data-i18n="devPageBtn">المطور</span>
                 </button>
 
-                <!-- زر مراقبة المستخدمين الخاص بالمطور -->
+                <!-- زر مراقبة المستخدمين الخاص بالآدمن -->
                 <button class="settings-option-btn" id="admin-monitor-btn" style="display: none; background: #e8f0fe; color: #1a73e8; border-color: #1a73e8;">
                     <i class="fa-solid fa-user-secret"></i>
                     <span>مراقبة عمليات بحث المستخدمين</span>
@@ -206,7 +288,7 @@
         </div>
     </div>
 
-    <!-- Admin Monitor Modal (Developer Dashboard) -->
+    <!-- Admin Monitor Modal -->
     <div class="modal" id="admin-monitor-modal">
         <div class="modal-content" style="max-width: 600px;">
             <span class="close-btn" id="close-admin-monitor-modal">&times;</span>
@@ -214,7 +296,7 @@
             <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">هنا يمكنك متابعة كل ما يبحث عنه المستخدمون في الوقت الفعلي:</p>
             <div style="max-height: 350px; overflow-y: auto;">
                 <ul id="admin-searches-list" style="list-style: none; padding: 0;">
-                    <!-- Live searches from Firestore will load here -->
+                    <!-- Live searches from Firestore -->
                 </ul>
             </div>
         </div>

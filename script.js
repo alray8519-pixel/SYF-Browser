@@ -1,6 +1,3 @@
-// ==========================================
-// 1. Firebase Configuration & Initialization
-// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyAk6UmlYdek_I7Jq5ZdRNVPJoyMmUArQeY",
     authDomain: "syf-browser.firebaseapp.com",
@@ -21,6 +18,7 @@ const mainView = document.getElementById('main-view');
 const resultsView = document.getElementById('results-view');
 const googleResultsIframe = document.getElementById('google-results-iframe');
 const backToHomeBtn = document.getElementById('back-to-home-btn');
+const topToolsContainer = document.getElementById('top-tools-container');
 
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
@@ -66,9 +64,6 @@ const adminMonitorModal = document.getElementById('admin-monitor-modal');
 const closeAdminMonitorModal = document.getElementById('close-admin-monitor-modal');
 const adminSearchesList = document.getElementById('admin-searches-list');
 
-const langToggleBtn = document.getElementById('lang-toggle-btn');
-const langIndicator = document.getElementById('lang-indicator');
-
 const supportBtn = document.getElementById('support-btn');
 const supportModal = document.getElementById('support-modal');
 const closeSupportModal = document.getElementById('close-support-modal');
@@ -76,11 +71,20 @@ const supportForm = document.getElementById('support-form');
 const supportMessageInput = document.getElementById('support-message-input');
 const SUPPORT_WHATSAPP_NUMBER = "201227095092";
 
+// عناصر البحث بالصورة
+const imageSearchBtn = document.getElementById('image-search-btn');
+const imageSearchModal = document.getElementById('image-search-modal');
+const closeImageSearchModal = document.getElementById('close-image-search-modal');
+const selectImageBtn = document.getElementById('select-image-btn');
+const imageSearchFileInput = document.getElementById('image-search-file-input');
+const imagePreviewContainer = document.getElementById('image-preview-container');
+const imageSearchPreview = document.getElementById('image-search-preview');
+const submitImageSearchBtn = document.getElementById('submit-image-search-btn');
+
 let isSignUpMode = true;
-let currentLang = localStorage.getItem('syf_lang') || 'ar';
 let currentUserData = null;
 
-// الخلفية والاختصارات
+// الخلفية
 const savedBg = localStorage.getItem('syf_custom_bg');
 if (savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
 
@@ -116,6 +120,43 @@ if (supportForm) {
     });
 }
 
+// ==========================================
+// تصحيح ميزة البحث باستخدام صورة من الجهاز
+// ==========================================
+if (imageSearchBtn) imageSearchBtn.addEventListener('click', () => imageSearchModal.style.display = 'flex');
+if (closeImageSearchModal) closeImageSearchModal.addEventListener('click', () => imageSearchModal.style.display = 'none');
+
+if (selectImageBtn && imageSearchFileInput) {
+    selectImageBtn.addEventListener('click', () => imageSearchFileInput.click());
+    imageSearchFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                imageSearchPreview.src = evt.target.result;
+                imagePreviewContainer.style.display = 'block';
+                submitImageSearchBtn.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (submitImageSearchBtn) {
+    submitImageSearchBtn.addEventListener('click', () => {
+        imageSearchModal.style.display = 'none';
+        // فتح بحث الصور في جوجل
+        mainView.style.display = 'none';
+        resultsView.style.display = 'flex';
+        if (topToolsContainer) topToolsContainer.style.display = 'none'; // إخفاء الأدوات العلوية
+        googleResultsIframe.src = `https://images.google.com/`;
+        
+        imagePreviewContainer.style.display = 'none';
+        submitImageSearchBtn.style.display = 'none';
+        imageSearchFileInput.value = '';
+    });
+}
+
 // التنزيلات
 function getDownloads() { return JSON.parse(localStorage.getItem('syf_downloads') || '[]'); }
 function renderDownloads() {
@@ -134,7 +175,7 @@ if (downloadsBtn) downloadsBtn.addEventListener('click', () => { settingsModal.s
 if (closeDownloadsModal) closeDownloadsModal.addEventListener('click', () => downloadsModal.style.display = 'none');
 if (clearDownloadsBtn) clearDownloadsBtn.addEventListener('click', () => { localStorage.removeItem('syf_downloads'); renderDownloads(); });
 
-// المصادقة والآدمن
+// المصادقة
 auth.onAuthStateChanged((user) => {
     currentUserData = user;
     if (user) {
@@ -152,7 +193,7 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// إدارة زر التبديل بين تسجيل الدخول وإنشاء حساب (تمت إضافتها وتصحيحها هنا)
+// تبديل تسجيل الدخول
 if (authToggleMsg) {
     authToggleMsg.addEventListener('click', () => {
         isSignUpMode = !isSignUpMode;
@@ -160,19 +201,18 @@ if (authToggleMsg) {
             modalTitle.innerText = "إنشاء حساب جديد";
             nameGroup.style.display = "flex";
             loginSubmitBtn.innerText = "إنشاء حساب";
-            authToggleMsg.innerText = "لديك حساب بالفعل؟ اضغط هنا لتسجيل الدخول";
+            authToggleMsg.innerText = "لديك حساب بالفعل؟ تسجيل الدخول";
             usernameInput.required = true;
         } else {
             modalTitle.innerText = "تسجيل الدخول";
             nameGroup.style.display = "none";
             loginSubmitBtn.innerText = "دخول";
-            authToggleMsg.innerText = "ليس لديك حساب؟ اضغط هنا لإنشاء حساب جديد";
+            authToggleMsg.innerText = "ليس لديك حساب؟ انشئ حساب جديد";
             usernameInput.required = false;
         }
     });
 }
 
-// تنفيذ عملية تسجيل الدخول أو إنشاء الحساب
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -193,7 +233,9 @@ if (loginForm) {
     });
 }
 
-// إدارة البحث وعرض جوجل داخل المتصفح (iframe)
+// ==========================================
+// إدارة البحث وإخفاء/إظهار الأدوات العلوية
+// ==========================================
 function performSearch(queryText) {
     const query = queryText || searchInput.value.trim();
     if (query !== '') {
@@ -211,9 +253,14 @@ function performSearch(queryText) {
             return;
         }
 
+        // إخفاء الشاشة الرئيسية وعرض النتائج
         mainView.style.display = 'none';
         resultsView.style.display = 'flex';
-        googleResultsIframe.src = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+        
+        // إخفاء كافة الأدوات العلوية (الإعدادات، البروفايل، الدعم، التنزيلات...) تماماً في صفحة النتائج
+        if (topToolsContainer) topToolsContainer.style.display = 'none';
+
+        googleResultsIframe.src = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
         searchInput.value = '';
     }
 }
@@ -221,15 +268,19 @@ function performSearch(queryText) {
 if (searchBtn) searchBtn.addEventListener('click', () => performSearch());
 if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
 
+// عند العودة للرئيسية: إظهار الأدوات العلوية مجدداً وإخفاء النتائج
 if (backToHomeBtn) {
     backToHomeBtn.addEventListener('click', () => {
         resultsView.style.display = 'none';
         mainView.style.display = 'flex';
         googleResultsIframe.src = '';
+        
+        // إرجاع وإظهار الأدوات العلوية في صفحة البحث الرئيسية
+        if (topToolsContainer) topToolsContainer.style.display = 'flex';
     });
 }
 
-// إعدادات المودال والتحكم
+// المودال والتحكم
 if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
 if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
 if (logoutBtn) logoutBtn.addEventListener('click', () => auth.signOut().then(() => profileModal.style.display = 'none'));

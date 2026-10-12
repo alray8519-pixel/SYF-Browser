@@ -14,7 +14,6 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const DEVELOPER_EMAIL = "admin@syfbrowser.com";
 
-const mainView = document.getElementById('main-view');
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 
@@ -66,16 +65,13 @@ const supportForm = document.getElementById('support-form');
 const supportMessageInput = document.getElementById('support-message-input');
 const SUPPORT_WHATSAPP_NUMBER = "201227095092";
 
-// عناصر الاختصارات
 const addShortcutBtn = document.getElementById('add-shortcut-btn');
 const shortcutModal = document.getElementById('shortcut-modal');
 const closeShortcutModal = document.getElementById('close-shortcut-modal');
 const shortcutForm = document.getElementById('shortcut-form');
 const shortcutTitle = document.getElementById('shortcut-title');
 const shortcutUrl = document.getElementById('shortcut-url');
-const shortcutsGrid = document.getElementById('shortcuts-grid');
 
-// عناصر البحث بالصورة
 const imageSearchBtn = document.getElementById('image-search-btn');
 const imageSearchModal = document.getElementById('image-search-modal');
 const closeImageSearchModal = document.getElementById('close-image-search-modal');

@@ -3,34 +3,427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYF Browser</title>
+    <title>SYF Browser - المتصفح الذكي</title>
+    <!-- App Favicon & FontAwesome -->
     <link rel="icon" type="image/png" href="favicon.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        :root {
+            --bg-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80');
+            --primary-red: #ea4335;
+            --primary-blue: #4285f4;
+            --primary-green: #34a853;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.15);
+            --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.35);
+            --card-bg: #ffffff;
+            --text-color: #202124;
+            --subtext-color: #5f6368;
+        }
+
+        body.dark-theme {
+            --glass-bg: rgba(0, 0, 0, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --card-bg: #2d2d2d;
+            --text-color: #f1f3f4;
+            --subtext-color: #bdc1c6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            transition: background-image 0.5s ease-in-out, background-color 0.3s;
+        }
+
+        /* Top Navigation Bar */
+        .top-bar {
+            width: 100%;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .top-bar-start, .top-bar-end {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: #ffffff;
+            min-width: 40px;
+            height: 40px;
+            padding: 0 10px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* شارة إظهار المحرك المختار حالياً */
+        .engine-badge {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* محرك البحث المختار (Dropdown Menu) */
+        .engine-selector-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .engine-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 48px;
+            right: 0;
+            background: var(--card-bg);
+            min-width: 190px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            border-radius: 12px;
+            z-index: 50;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .engine-dropdown-content button {
+            width: 100%;
+            padding: 10px 15px;
+            text-align: right;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+
+        .engine-dropdown-content button:hover {
+            background: rgba(66, 133, 244, 0.15);
+            color: var(--primary-blue);
+        }
+
+        /* Main Home View */
+        #main-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90%;
+            max-width: 650px;
+            height: 100vh;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .logo .char-s { color: var(--primary-red); }
+        .logo .char-y { color: var(--primary-blue); }
+        .logo .char-f { color: var(--primary-green); }
+
+        .search-box {
+            width: 100%;
+            background: #ffffff;
+            border-radius: 30px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 10px 15px;
+            font-size: 1.1rem;
+            color: #202124;
+            background: transparent;
+        }
+
+        .search-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .action-btn {
+            color: #5f6368;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .action-btn:hover {
+            color: var(--primary-blue);
+        }
+
+        /* Shortcuts */
+        .shortcuts-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 35px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .shortcut-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #ffffff;
+            transition: transform 0.3s ease;
+            width: 75px;
+            cursor: pointer;
+        }
+
+        .shortcut-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .shortcut-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 8px;
+        }
+
+        .shortcut-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+
+        /* Settings Options Inside Modal */
+        .settings-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .settings-option-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.04);
+            color: var(--text-color);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: right;
+        }
+
+        body.dark-theme .settings-option-btn {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .settings-option-btn:hover {
+            background: var(--primary-blue);
+            color: #ffffff;
+            border-color: var(--primary-blue);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            color: var(--text-color);
+            width: 90%;
+            max-width: 420px;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #70757a;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 10px;
+            outline: none;
+            background: transparent;
+            color: var(--text-color);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .user-avatar-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+
+        .user-avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
 </head>
 <body>
 
     <!-- Top Navigation Bar -->
     <div class="top-bar">
         <div class="top-bar-start">
-            <div id="user-badge-container">
-                <div id="user-avatar-btn" class="user-avatar-wrapper" style="display: none; cursor: pointer;">
-                    <img id="top-user-avatar" src="" alt="User Avatar" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">
+            <div id="user-badge-container" style="display: flex; align-items: center; gap: 10px;">
+                <div id="user-avatar-btn" class="user-avatar-wrapper" style="display: none;">
+                    <img id="top-user-avatar" src="" alt="User Avatar">
+                </div>
+                <button class="icon-btn" id="open-login-btn" title="تسجيل الدخول / الحساب">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+
+                <!-- شارة إظهار محرك البحث النشط حالياً -->
+                <div class="engine-badge" id="active-engine-badge">
+                    <i class="fa-brands fa-google" id="badge-icon" style="color:#4285f4;"></i>
+                    <span id="badge-text">جوجل</span>
+                </div>
+
+                <!-- زر اختيار محرك البحث أو المتصفح -->
+                <div class="engine-selector-wrapper">
+                    <button class="icon-btn" id="engine-menu-btn" title="تغيير محرك البحث / المنصة">
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i>
+                    </button>
+                    <div class="engine-dropdown-content" id="engine-dropdown">
+                        <button data-engine="google" data-name="جوجل" data-icon="fa-brands fa-google" data-color="#4285f4"><i class="fa-brands fa-google" style="color:#4285f4;"></i> جوجل (Google)</button>
+                        <button data-engine="edge" data-name="Edge" data-icon="fa-brands fa-edge" data-color="#008575"><i class="fa-brands fa-edge" style="color:#008575;"></i> مايكروسوفت إيدج (Bing)</button>
+                        <button data-engine="perplexity" data-name="Perplexity" data-icon="fa-solid fa-compass" data-color="#20b2aa"><i class="fa-solid fa-compass" style="color:#20b2aa;"></i> بيربلكستي (Perplexity)</button>
+                        <button data-engine="gemini" data-name="Gemini AI" data-icon="fa-solid fa-brain" data-color="#1a73e8"><i class="fa-solid fa-brain" style="color:#1a73e8;"></i> جمناي (Gemini AI)</button>
+                        <button data-engine="wikipedia" data-name="ويكيبيديا" data-icon="fa-solid fa-book" data-color="#333"><i class="fa-solid fa-book" style="color:#333;"></i> ويكيبيديا (Wikipedia)</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="top-bar-end">
-            <button class="icon-btn" id="support-btn" title="الدعم الفني عبر واتساب">
-                <i class="fa-brands fa-whatsapp"></i>
-            </button>
-            <button class="icon-btn" id="top-downloads-btn" title="التنزيلات">
-                <i class="fa-solid fa-download"></i>
-            </button>
+        <div class="top-bar-end" id="top-tools-container">
             <button class="icon-btn" id="bg-btn" title="تغيير الخلفية">
                 <i class="fa-solid fa-image"></i>
             </button>
-            <button class="icon-btn" id="settings-btn" title="الإعدادات">
+            <button class="icon-btn" id="settings-btn" title="الإعدادات الرئيسية">
                 <i class="fa-solid fa-gear"></i>
             </button>
             <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
@@ -45,54 +438,74 @@
 
         <!-- Search Box -->
         <div class="search-box">
-            <input type="text" class="search-input" id="search-input" placeholder="ابحث في SYF أو أدخل رابطاً...">
+            <input type="text" class="search-input" id="search-input" placeholder="ابحث في المتصفح أو أدخل رابطاً...">
             <div class="search-actions">
-                <i class="fa-solid fa-camera action-btn" id="image-search-btn" title="البحث باستخدام صورة"></i>
-                <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث"></i>
+                <i class="fa-solid fa-magnifying-glass action-btn" id="search-btn" title="بحث سريع"></i>
             </div>
         </div>
 
         <!-- Shortcuts -->
         <div class="shortcuts-container" id="shortcuts-grid">
-            <a href="https://www.youtube.com" class="shortcut-item youtube" target="_blank">
-                <div class="shortcut-icon"><i class="fa-brands fa-youtube"></i></div>
+            <a href="https://www.bing.com" target="_blank" class="shortcut-item" title="بحث Edge">
+                <div class="shortcut-icon" style="color:#008575;"><i class="fa-brands fa-edge"></i></div>
+                <span class="shortcut-label">بحث Edge</span>
+            </a>
+            <a href="https://www.youtube.com" target="_blank" class="shortcut-item">
+                <div class="shortcut-icon" style="color:#ff0000;"><i class="fa-brands fa-youtube"></i></div>
                 <span class="shortcut-label">يوتيوب</span>
             </a>
-            <a href="https://www.instagram.com" class="shortcut-item instagram" target="_blank">
-                <div class="shortcut-icon"><i class="fa-brands fa-instagram"></i></div>
-                <span class="shortcut-label">إنستغرام</span>
-            </a>
-            <a href="https://www.facebook.com" class="shortcut-item facebook" target="_blank">
-                <div class="shortcut-icon"><i class="fa-brands fa-facebook-f"></i></div>
+            <a href="https://www.facebook.com" target="_blank" class="shortcut-item">
+                <div class="shortcut-icon" style="color:#1877f2;"><i class="fa-brands fa-facebook-f"></i></div>
                 <span class="shortcut-label">فيسبوك</span>
             </a>
-            <a href="https://www.netflix.com" class="shortcut-item netflix" target="_blank">
-                <div class="shortcut-icon"><i class="fa-solid fa-film"></i></div>
-                <span class="shortcut-label">نتفليكس</span>
+            <a href="https://www.wikipedia.org" target="_blank" class="shortcut-item">
+                <div class="shortcut-icon" style="color:#000;"><i class="fa-solid fa-book"></i></div>
+                <span class="shortcut-label">ويكيبيديا</span>
             </a>
-            <div class="shortcut-item add-shortcut" id="add-shortcut-btn">
-                <div class="shortcut-icon add-icon"><i class="fa-solid fa-plus"></i></div>
-                <span class="shortcut-label">إضافة موقع</span>
+        </div>
+    </div>
+
+    <!-- Settings Modal (قائمة الإعدادات المركزية) -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-settings-modal">&times;</span>
+            <h2 style="margin-bottom: 10px;">الإعدادات والخيارات</h2>
+            <div class="settings-options">
+                <button class="settings-option-btn" id="menu-history-btn"><i class="fa-solid fa-clock-rotate-left" style="color:#1a73e8;"></i> سجل البحث والزيارات</button>
+                <button class="settings-option-btn" id="menu-downloads-btn"><i class="fa-solid fa-download" style="color:#34a853;"></i> التنزيلات</button>
+                <button class="settings-option-btn" id="menu-bookmarks-btn"><i class="fa-solid fa-bookmark" style="color:#4285f4;"></i> المفضلات</button>
+                <button class="settings-option-btn" id="menu-dark-mode-btn"><i class="fa-solid fa-moon" style="color:#fbbc05;"></i> تبديل وضع المظهر (الداكن / الفاتح)</button>
+                <button class="settings-option-btn" id="menu-incognito-btn"><i class="fa-solid fa-user-secret" style="color:#ea4335;"></i> تفعيل / إلغاء التصفح الخفي</button>
+                <button class="settings-option-btn" id="menu-support-btn"><i class="fa-brands fa-whatsapp" style="color:#25d366;"></i> الدعم الفني عبر واتساب</button>
+            </div>
+            <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); text-align: center; font-size: 0.85rem; color: var(--subtext-color);">
+                المطور: يوسف أبو الحجاج صالح - قنا، مصر
             </div>
         </div>
     </div>
 
-    <!-- Image Search Modal -->
-    <div class="modal" id="image-search-modal">
-        <div class="modal-content" style="text-align: center;">
-            <span class="close-btn" id="close-image-search-modal">&times;</span>
-            <h2 style="margin-bottom: 10px;">البحث باستخدام صورة</h2>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">اختر صورة من هاتفك أو جهازك للبحث عنها.</p>
-            <input type="file" id="image-search-file-input" accept="image/*" style="display: none;">
-            <div id="image-preview-container" style="display: none; margin-bottom: 15px;">
-                <img id="image-search-preview" alt="معاينة" style="max-width: 100%; max-height: 150px; border-radius: 8px;">
+    <!-- History Modal (نافذة السجل) -->
+    <div class="modal" id="history-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-history-modal">&times;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>سجل البحث</h2>
+                <button id="clear-history-btn" style="background: #ea4335; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">مسح السجل</button>
             </div>
-            <button id="select-image-btn" class="submit-btn" style="background: #f1f3f4; color: #333; margin-bottom: 10px; cursor: pointer;">
-                <i class="fa-solid fa-upload"></i> اختيار صورة من الجهاز
-            </button>
-            <button id="submit-image-search-btn" class="submit-btn" style="display: none; cursor: pointer;">
-                <i class="fa-solid fa-magnifying-glass"></i> الانتقال للبحث بالصورة
-            </button>
+            <ul id="history-list" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;">
+                <li style="text-align:center; padding:15px; color:#888;">لا يوجد سجل بحث حالياً</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Bookmarks Modal -->
+    <div class="modal" id="bookmarks-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-bookmarks-modal">&times;</span>
+            <h2 style="margin-bottom: 15px;">المفضلات</h2>
+            <ul id="bookmarks-list" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;">
+                <li style="text-align:center; padding:15px; color:#888;">لا توجد مفضلات محفوظة</li>
+            </ul>
         </div>
     </div>
 
@@ -100,24 +513,10 @@
     <div class="modal" id="downloads-modal">
         <div class="modal-content">
             <span class="close-btn" id="close-downloads-modal">&times;</span>
-            <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2>التنزيلات</h2>
-                <button class="clear-btn" id="clear-downloads-btn" style="background: #ea4335; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">مسح السجل</button>
-            </div>
-            <ul id="downloads-list" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;"></ul>
-        </div>
-    </div>
-
-    <!-- Add Shortcut Modal -->
-    <div class="modal" id="shortcut-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-shortcut-modal">&times;</span>
-            <h2 style="margin-bottom: 20px; text-align: center;">إضافة اختصار جديد</h2>
-            <form id="shortcut-form">
-                <div class="form-group"><label>اسم الموقع</label><input type="text" id="shortcut-title" required placeholder="مثال: جوجل"></div>
-                <div class="form-group"><label>رابط الموقع (URL)</label><input type="url" id="shortcut-url" required placeholder="https://example.com"></div>
-                <button type="submit" class="submit-btn">حفظ الاختصار</button>
-            </form>
+            <h2 style="margin-bottom: 15px;">التنزيلات</h2>
+            <ul id="downloads-list" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;">
+                <li style="text-align: center; color: #888; padding: 15px;">لا توجد تنزيلات حالية.</li>
+            </ul>
         </div>
     </div>
 
@@ -126,74 +525,360 @@
         <div class="modal-content" style="text-align: center;">
             <span class="close-btn" id="close-support-modal">&times;</span>
             <div style="font-size: 3rem; color: #25d366; margin-bottom: 10px;"><i class="fa-brands fa-whatsapp"></i></div>
-            <h2 style="margin-bottom: 10px;">الدعم الفني عبر واتساب</h2>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">الرد خلال 24 ساعة.</p>
+            <h2>الدعم الفني عبر واتساب</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">الرد خلال 24 ساعة.</p>
             <form id="support-form">
-                <div class="form-group" style="text-align: right;"><textarea id="support-message-input" placeholder="اكتب استفسارك هنا..." style="width: 100%; height: 110px; padding: 12px; border-radius: 12px; border: 1px solid #dadce0; resize: none;"></textarea></div>
-                <button type="submit" class="submit-btn" style="background-color: #25d366; cursor: pointer;"><i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب</button>
+                <div class="form-group"><textarea id="support-message-input" placeholder="اكتب استفسارك هنا..."></textarea></div>
+                <button type="submit" class="submit-btn" style="background-color: #25d366;"><i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب</button>
             </form>
         </div>
     </div>
 
-    <!-- Login Modal (يظهر للمستخدم غير المسجل) -->
-    <div class="modal" id="login-modal" style="display: none;">
+    <!-- Login Modal -->
+    <div class="modal" id="login-modal">
         <div class="modal-content">
-            <h2 id="modal-title" style="margin-bottom: 20px; text-align: center;">إنشاء حساب جديد</h2>
+            <span class="close-btn" id="close-login-modal">&times;</span>
+            <h2 id="modal-title" style="margin-bottom: 20px; text-align: center;">تسجيل الدخول / حساب جديد</h2>
             <form id="login-form">
-                <div class="form-group" id="name-group"><label>الاسم الثلاثي</label><input type="text" id="username-input" autocomplete="name" placeholder="أدخل اسمك الثلاثي..."></div>
-                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email-input" required autocomplete="username" placeholder="name@example.com"></div>
-                <div class="form-group"><label>كلمة السر</label><input type="password" id="password-input" required autocomplete="current-password" placeholder="••••••••"></div>
-                <button type="submit" class="submit-btn" id="login-submit-btn" style="margin-top: 15px; cursor: pointer;">إنشاء حساب</button>
-                <p id="auth-toggle-msg" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem; font-weight: bold;">لديك حساب بالفعل؟ تسجيل الدخول</p>
+                <div class="form-group" id="name-group" style="display:none;"><label>الاسم الثلاثي</label><input type="text" id="username-input" placeholder="أدخل اسمك..."></div>
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email-input" required placeholder="name@example.com"></div>
+                <div class="form-group"><label>كلمة السر</label><input type="password" id="password-input" required placeholder="••••••••"></div>
+                <button type="submit" class="submit-btn" id="login-submit-btn">تسجيل الدخول</button>
+                <p id="auth-toggle-msg" style="text-align: center; margin-top: 12px; cursor: pointer; color: #1a73e8; font-size: 0.85rem;">ليس لديك حساب؟ انشئ حساب جديد</p>
             </form>
         </div>
     </div>
 
     <!-- Profile Modal -->
     <div class="modal" id="profile-modal">
-        <div class="modal-content profile-card" style="text-align: center;">
-            <span class="close-btn" id="close-profile-modal">&times;</span>
-            <img id="card-user-avatar" src="" alt="Avatar" class="large-avatar" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; object-fit: cover;">
-            <h3 id="card-user-name" style="margin-bottom: 15px;"></h3>
-            <button id="logout-btn" class="logout-action-btn" style="background: #ea4335; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer;">تسجيل الخروج</button>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div class="modal" id="settings-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-settings-modal">&times;</span>
-            <h2 style="margin-bottom: 20px;">الإعدادات</h2>
-            <div class="settings-options" style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="settings-option-btn" id="downloads-btn" style="padding: 12px; cursor: pointer;">التنزيلات</button>
-                <button class="settings-option-btn" id="show-dev-btn" style="padding: 12px; cursor: pointer;">المطور</button>
-                <button class="settings-option-btn" id="admin-monitor-btn" style="display: none; padding: 12px; background: #e8f0fe; color: #1a73e8; cursor: pointer;">مراقبة عمليات البحث</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Monitor Modal -->
-    <div class="modal" id="admin-monitor-modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <span class="close-btn" id="close-admin-monitor-modal">&times;</span>
-            <h2 style="margin-bottom: 15px; color: #1a73e8;">مراقبة عمليات البحث</h2>
-            <ul id="admin-searches-list" style="list-style: none; padding: 0; max-height: 350px; overflow-y: auto;"></ul>
-        </div>
-    </div>
-
-    <!-- Developer Modal -->
-    <div class="modal" id="dev-modal">
         <div class="modal-content" style="text-align: center;">
-            <span class="close-btn" id="close-dev-modal">&times;</span>
-            <h2>المطور</h2>
-            <p style="margin: 15px 0;">يوسف أبو الحجاج صالح - مصر - قنا</p>
-            <a href="https://www.youtube.com/@YYT_1" target="_blank" style="color: #ff0000; font-weight: bold;">زيارة القناة (@YYT_1)</a>
+            <span class="close-btn" id="close-profile-modal">&times;</span>
+            <img id="card-user-avatar" src="" alt="Avatar" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px;">
+            <h3 id="card-user-name" style="margin-bottom: 15px;"></h3>
+            <button id="logout-btn" style="background: #ea4335; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer;">تسجيل الخروج</button>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="script.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAk6UmlYdek_I7Jq5ZdRNVPJoyMmUArQeY",
+            authDomain: "syf-browser.firebaseapp.com",
+            projectId: "syf-browser",
+            storageBucket: "syf-browser.firebasestorage.app",
+            messagingSenderId: "458736540441",
+            appId: "1:458736540441:web:2e7da0fbfec1e17f2b8388"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+
+        // محرك البحث الافتراضي المختار
+        let selectedEngine = 'google';
+
+        // عناصر قائمة اختيار محرك البحث والشارة المرئية
+        const engineMenuBtn = document.getElementById('engine-menu-btn');
+        const engineDropdown = document.getElementById('engine-dropdown');
+        const engineButtons = engineDropdown.querySelectorAll('button');
+        const badgeText = document.getElementById('badge-text');
+        const badgeIcon = document.getElementById('badge-icon');
+
+        engineMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            engineDropdown.style.display = engineDropdown.style.display === 'block' ? 'none' : 'block';
+        });
+
+        window.addEventListener('click', () => {
+            engineDropdown.style.display = 'none';
+        });
+
+        engineButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedEngine = btn.getAttribute('data-engine');
+                const engineName = btn.getAttribute('data-name');
+                const engineIconClass = btn.getAttribute('data-icon');
+                const engineColor = btn.getAttribute('data-color');
+
+                // تحديث الشارة المرئية في الأعلى ليعرف المستخدم المحرك النشط
+                badgeText.innerText = engineName;
+                badgeIcon.className = engineIconClass;
+                badgeIcon.style.color = engineColor;
+
+                engineDropdown.style.display = 'none';
+            });
+        });
+
+        // إدارة السجل (History) محلياً وفي Firebase
+        function getLocalHistory() {
+            return JSON.parse(localStorage.getItem('syf_history') || '[]');
+        }
+
+        function saveToHistory(query) {
+            let history = getLocalHistory();
+            history.unshift({ query: query, time: new Date().toLocaleTimeString('ar-EG') });
+            if (history.length > 50) history.pop(); // الاحتفاظ بأحدث 50 بحثاً
+            localStorage.setItem('syf_history', JSON.stringify(history));
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('history-list');
+            const history = getLocalHistory();
+            historyList.innerHTML = history.length === 0 ? '<li style="text-align:center; padding:15px; color:#888;">لا يوجد سجل بحث حالياً</li>' : '';
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.style.cssText = "padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;";
+                li.innerHTML = `<span style="font-weight:600;">${item.query}</span><span style="font-size:0.75rem; color:#888;">${item.time}</span>`;
+                historyList.appendChild(li);
+            });
+        }
+
+        // الأزرار والنوافذ
+        const openLoginBtn = document.getElementById('open-login-btn');
+        const loginModal = document.getElementById('login-modal');
+        const closeLoginModal = document.getElementById('close-login-modal');
+        const loginForm = document.getElementById('login-form');
+        const modalTitle = document.getElementById('modal-title');
+        const nameGroup = document.getElementById('name-group');
+        const usernameInput = document.getElementById('username-input');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginSubmitBtn = document.getElementById('login-submit-btn');
+        const authToggleMsg = document.getElementById('auth-toggle-msg');
+
+        const userAvatarBtn = document.getElementById('user-avatar-btn');
+        const topUserAvatar = document.getElementById('top-user-avatar');
+        const profileModal = document.getElementById('profile-modal');
+        const closeProfileModal = document.getElementById('close-profile-modal');
+        const cardUserAvatar = document.getElementById('card-user-avatar');
+        const cardUserName = document.getElementById('card-user-name');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        const bgBtn = document.getElementById('bg-btn');
+        const bgFileInput = document.getElementById('bg-file-input');
+
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsModal = document.getElementById('close-settings-modal');
+
+        const menuHistoryBtn = document.getElementById('menu-history-btn');
+        const historyModal = document.getElementById('history-modal');
+        const closeHistoryModal = document.getElementById('close-history-modal');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+        const menuDownloadsBtn = document.getElementById('menu-downloads-btn');
+        const downloadsModal = document.getElementById('downloads-modal');
+        const closeDownloadsModal = document.getElementById('close-downloads-modal');
+
+        const menuBookmarksBtn = document.getElementById('menu-bookmarks-btn');
+        const bookmarksModal = document.getElementById('bookmarks-modal');
+        const closeBookmarksModal = document.getElementById('close-bookmarks-modal');
+
+        const menuDarkModeBtn = document.getElementById('menu-dark-mode-btn');
+        const menuIncognitoBtn = document.getElementById('menu-incognito-btn');
+        
+        const menuSupportBtn = document.getElementById('menu-support-btn');
+        const supportModal = document.getElementById('support-modal');
+        const closeSupportModal = document.getElementById('close-support-modal');
+        const supportForm = document.getElementById('support-form');
+
+        let isIncognito = false;
+        let isSignUpMode = false;
+        let currentUserData = null;
+
+        // تنفيذ البحث بناءً على محرك البحث المختار وتخزينه في السجل
+        function performSearch(queryText) {
+            const query = queryText || searchInput.value.trim();
+            if (query !== '') {
+                if (!isIncognito) {
+                    saveToHistory(query);
+                    if (currentUserData) {
+                        db.collection("user_searches").add({
+                            userEmail: currentUserData.email,
+                            userName: currentUserData.displayName || "مستخدم",
+                            query: query,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        }).catch(() => {});
+                    }
+                }
+
+                if (query.startsWith('http://') || query.startsWith('https://')) {
+                    window.open(query, '_blank');
+                    return;
+                }
+
+                let targetUrl = '';
+                switch(selectedEngine) {
+                    case 'google':
+                        targetUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                        break;
+                    case 'edge':
+                        targetUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+                        break;
+                    case 'perplexity':
+                        targetUrl = `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}`;
+                        break;
+                    case 'gemini':
+                        targetUrl = `https://gemini.google.com/app`;
+                        break;
+                    case 'wikipedia':
+                        targetUrl = `https://ar.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}`;
+                        break;
+                    default:
+                        targetUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                }
+
+                window.open(targetUrl, '_blank');
+            }
+        }
+
+        if (searchBtn) searchBtn.addEventListener('click', () => performSearch());
+        if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+
+        // الخلفية
+        if (bgBtn && bgFileInput) {
+            bgBtn.addEventListener('click', () => bgFileInput.click());
+            bgFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => { document.body.style.backgroundImage = `url('${evt.target.result}')`; };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // قائمة الإعدادات والنوافذ والسجل
+        if (settingsBtn) settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
+        if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
+
+        if (menuHistoryBtn) {
+            menuHistoryBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+                renderHistory();
+                historyModal.style.display = 'flex';
+            });
+        }
+        if (closeHistoryModal) closeHistoryModal.addEventListener('click', () => historyModal.style.display = 'none');
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', () => {
+                localStorage.removeItem('syf_history');
+                renderHistory();
+            });
+        }
+
+        if (menuDownloadsBtn) {
+            menuDownloadsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+                downloadsModal.style.display = 'flex';
+            });
+        }
+        if (closeDownloadsModal) closeDownloadsModal.addEventListener('click', () => downloadsModal.style.display = 'none');
+
+        if (menuBookmarksBtn) {
+            menuBookmarksBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+                bookmarksModal.style.display = 'flex';
+            });
+        }
+        if (closeBookmarksModal) closeBookmarksModal.addEventListener('click', () => bookmarksModal.style.display = 'none');
+
+        if (menuDarkModeBtn) {
+            menuDarkModeBtn.addEventListener('click', () => {
+                document.body.classList.toggle('dark-theme');
+            });
+        }
+
+        if (menuIncognitoBtn) {
+            menuIncognitoBtn.addEventListener('click', () => {
+                isIncognito = !isIncognito;
+                alert(isIncognito ? "تم تفعيل وضع التصفح الخفي (لن يتم حفظ السجل)" : "تم إلغاء التصفح الخفي");
+            });
+        }
+
+        if (menuSupportBtn) {
+            menuSupportBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+                supportModal.style.display = 'flex';
+            });
+        }
+        if (closeSupportModal) closeSupportModal.addEventListener('click', () => supportModal.style.display = 'none');
+        
+        if (supportForm) {
+            supportForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const msg = document.getElementById('support-message-input').value.trim();
+                window.open(`https://wa.me/201227095092?text=${encodeURIComponent(msg || 'مرحباً، أحتاج مساعدة في متصفح SYF.')}`, '_blank');
+                supportModal.style.display = 'none';
+            });
+        }
+
+        // المصادقة
+        if (openLoginBtn) openLoginBtn.addEventListener('click', () => loginModal.style.display = 'flex');
+        if (closeLoginModal) closeLoginModal.addEventListener('click', () => loginModal.style.display = 'none');
+
+        auth.onAuthStateChanged((user) => {
+            currentUserData = user;
+            if (user) {
+                loginModal.style.display = 'none';
+                openLoginBtn.style.display = 'none';
+                userAvatarBtn.style.display = 'block';
+                const avatar = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=1a73e8&color=fff`;
+                topUserAvatar.src = avatar;
+                cardUserAvatar.src = avatar;
+                cardUserName.innerText = user.displayName || user.email;
+            } else {
+                openLoginBtn.style.display = 'block';
+                userAvatarBtn.style.display = 'none';
+            }
+        });
+
+        if (authToggleMsg) {
+            authToggleMsg.addEventListener('click', () => {
+                isSignUpMode = !isSignUpMode;
+                modalTitle.innerText = isSignUpMode ? "إنشاء حساب جديد" : "تسجيل الدخول";
+                nameGroup.style.display = isSignUpMode ? "block" : "none";
+                loginSubmitBtn.innerText = isSignUpMode ? "إنشاء حساب" : "تسجيل الدخول";
+                authToggleMsg.innerText = isSignUpMode ? "لديك حساب بالفعل؟ تسجيل الدخول" : "ليس لديك حساب؟ انشئ حساب جديد";
+            });
+        }
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const name = usernameInput.value.trim();
+
+                if (isSignUpMode) {
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .then((uc) => uc.user.updateProfile({ displayName: name }))
+                        .then(() => { loginModal.style.display = 'none'; loginForm.reset(); })
+                        .catch((err) => alert("خطأ: " + err.message));
+                } else {
+                    auth.signInWithEmailAndPassword(email, password)
+                        .then(() => { loginModal.style.display = 'none'; loginForm.reset(); })
+                        .catch((err) => alert("خطأ: " + err.message));
+                }
+            });
+        }
+
+        if (userAvatarBtn) userAvatarBtn.addEventListener('click', () => profileModal.style.display = 'flex');
+        if (closeProfileModal) closeProfileModal.addEventListener('click', () => profileModal.style.display = 'none');
+        if (logoutBtn) logoutBtn.addEventListener('click', () => auth.signOut().then(() => profileModal.style.display = 'none'));
+
+        window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; });
+    </script>
 </body>
 </html>
+
+
+
+
